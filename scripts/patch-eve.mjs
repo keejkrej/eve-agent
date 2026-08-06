@@ -4,6 +4,7 @@ import path from "node:path";
 const root = process.cwd();
 const handlerPath = path.join(root, "node_modules/eve/dist/src/cli/dev/tui/prompt-command-handler.js");
 const statusPath = path.join(root, "node_modules/eve/dist/src/cli/dev/tui/status-line.js");
+const runnerPath = path.join(root, "node_modules/eve/dist/src/cli/dev/tui/runner.js");
 
 async function patchHandler() {
   let source = await readFile(handlerPath, "utf8");
@@ -27,6 +28,16 @@ async function patchStatusLine() {
   await writeFile(statusPath, source.replace(original, patched));
 }
 
+async function patchRunner() {
+  let source = await readFile(runnerPath, "utf8");
+  const original = 'function authIssueForStatus(e){if(e===`logged-out`)return LOGIN_SETUP_ISSUE;if(e===`cli-missing`)return CLI_MISSING_SETUP_ISSUE}';
+  const patched = 'function authIssueForStatus(e){return}';
+  if (source.includes(patched)) return;
+  if (!source.includes(original)) throw new Error("Unsupported Eve Vercel setup warning logic; update scripts/patch-eve.mjs");
+  await writeFile(runnerPath, source.replace(original, patched));
+}
+
 await patchHandler();
 await patchStatusLine();
+await patchRunner();
 console.log("Patched Eve TUI with eve-agent model controls.");

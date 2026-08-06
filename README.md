@@ -52,7 +52,9 @@ eve-agent model ollama-cloud/gpt-oss:120b
 
 Enter an Ollama Cloud API key when prompted. `OLLAMA_API_KEY` can also supply it non-interactively.
 
-### Vercel AI Gateway fallback
+### Optional Vercel AI Gateway
+
+A Vercel account is **not required** for ChatGPT, xAI, or Ollama Cloud models. Eve Agent suppresses Eve's Vercel login and AI Gateway setup warnings in local TUI sessions. `/vc:login`, `/deploy`, and Gateway routing remain available if you intentionally choose to use Vercel.
 
 ```sh
 cp .env.example .env.local
@@ -89,7 +91,7 @@ Configuration and credentials are stored under `~/.config/eve-agent/`. Directori
 
 Run `/model` inside the Eve TUI to choose the model, thinking level, and Normal/Fast service tier. Fast maps to ChatGPT's priority service tier and is shown with `↯` in the footer. The selection is persisted and triggers an Eve rebuild for the next prompt.
 
-The project applies a narrow postinstall patch to Eve 0.30.8 so its built-in `/model` command opens this subscription-aware picker instead of the AI Gateway-only source editor. `eve-agent model ...` remains available outside the TUI.
+The project applies a narrow postinstall patch to Eve 0.30.8 so its built-in `/model` command opens this subscription-aware picker instead of the AI Gateway-only source editor. The same patch hides unsolicited Vercel-login and AI Gateway setup warnings for local use. `eve-agent model ...` remains available outside the TUI.
 
 ## TUI commands
 
