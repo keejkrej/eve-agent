@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
+import { writeActiveSettingsFile } from "./active-settings-file.mjs";
 
 const major = Number(process.versions.node.split(".")[0]);
 if (major < 24) {
@@ -53,13 +54,12 @@ if (commands.has(inputArgs[0])) {
     process.exit(1);
   }
 
-  let configuredModel;
-  if (!modelOverride) {
-    const home = process.env.EVE_AGENT_HOME?.trim() || path.join(os.homedir(), ".config", "eve-agent");
-    try { configuredModel = JSON.parse(await readFile(path.join(home, "config.json"), "utf8")).model; }
-    catch (error) { if (error?.code !== "ENOENT") console.warn(`Ignoring unreadable model config: ${error.message}`); }
-  }
-  const selectedModel = modelOverride ?? configuredModel;
+  let modelConfig = { version: 1, model: undefined, reasoning: "high", priority: false };
+  const home = process.env.EVE_AGENT_HOME?.trim() || path.join(os.homedir(), ".config", "eve-agent");
+  try { modelConfig = { ...modelConfig, ...JSON.parse(await readFile(path.join(home, "config.json"), "utf8")) }; }
+  catch (error) { if (error?.code !== "ENOENT") console.warn(`Ignoring unreadable model config: ${error.message}`); }
+  await writeActiveSettingsFile(agentRoot, modelConfig);
+  const selectedModel = modelOverride ?? modelConfig.model;
   console.log(`Eve Agent workspace: ${workspace}`);
   console.log(`Model: ${selectedModel ?? "Vercel AI Gateway fallback"}`);
   console.log("Warning: this agent's tools can edit files and execute commands here with your host permissions.\n");

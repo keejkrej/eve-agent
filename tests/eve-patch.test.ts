@@ -11,6 +11,7 @@ test("installed Eve TUI uses subscription controls without mandatory Vercel warn
   const status = await readFile(path.join(eveTui, "status-line.js"), "utf8");
   const header = await readFile(path.join(eveTui, "agent-header.js"), "utf8");
   assert.match(handler, /runEveAgentModelFlow/);
+  assert.match(handler, /serverUrl:a\.serverUrl/);
   assert.match(runner, /function authIssueForStatus\(e\)\{return\}/);
   assert.match(status, /openai:`chatgpt-sub`/);
   assert.doesNotMatch(header, /Use \/deploy/);

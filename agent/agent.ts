@@ -1,11 +1,10 @@
 import { defineAgent } from "eve";
-import { readConfig } from "../src/models/auth-store.js";
+import { activeSettings } from "./lib/active-settings.generated.js";
 import { resolveCustomModel } from "../src/models/providers.js";
 
-const settings = await readConfig();
 const configured = await resolveCustomModel(
-  process.env.EVE_AGENT_MODEL_OVERRIDE ?? settings.model,
-  { priority: settings.priority === true },
+  process.env.EVE_AGENT_MODEL_OVERRIDE ?? activeSettings.model,
+  { priority: activeSettings.priority },
 );
 const model = configured && typeof configured === "object"
   ? configured.model
@@ -21,6 +20,6 @@ export default defineAgent({
   model,
   modelContextWindowTokens,
   modelOptions,
-  reasoning: settings.reasoning ?? "high",
+  reasoning: activeSettings.reasoning,
   compaction: { thresholdPercent: 0.75 },
 });

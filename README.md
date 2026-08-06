@@ -89,7 +89,7 @@ Configuration and credentials are stored under `~/.config/eve-agent/`. Directori
 
 > **Provider caveat:** ChatGPT subscription and SuperGrok OAuth use public-client flows and service endpoints modeled after Prime Agent's implementations. These endpoints are not stable public API contracts and providers may change or restrict them. Ensure your use complies with the provider's terms.
 
-Run `/model` inside the Eve TUI to choose the model, thinking level, and Normal/Fast service tier. Fast maps to ChatGPT's priority service tier and is shown with `↯` in the footer. The selection is persisted and triggers an Eve rebuild for the next prompt.
+Run `/model` inside the Eve TUI to choose the model, thinking level, and Normal/Fast service tier. The model list is searchable: type any partial provider or model name to filter it. Fast maps to ChatGPT's priority service tier and is shown with `↯` in the footer. The selection is persisted; Eve waits for the rebuilt generation and refreshes the footer before returning control.
 
 The project applies a narrow postinstall patch to Eve 0.30.8 so its built-in `/model` command opens this subscription-aware picker instead of the AI Gateway-only source editor. The same patch hides unsolicited Vercel-login and AI Gateway setup warnings for local use. `eve-agent model ...` remains available outside the TUI.
 

@@ -17,9 +17,24 @@ test("TUI model flow persists model, thinking, and fast tier", async () => {
     "priority", "fast",
     "done",
   ];
-  const prompter = { select: async () => answers.shift() };
-  const message = await runEveAgentModelFlow({ appRoot, prompter });
+  const requests: Array<Record<string, unknown>> = [];
+  const prompter = { select: async (request: Record<string, unknown>) => { requests.push(request); return answers.shift(); } };
+  const originalFetch = globalThis.fetch;
+  let ready = false;
+  setTimeout(() => { ready = true; }, 50);
+  globalThis.fetch = async () => Response.json({
+    agent: { model: ready ? { id: "openai/gpt-5.6-sol", reasoning: "xhigh" } : { id: "openai/old", reasoning: "low" } },
+  });
+  let message: string;
+  try {
+    message = await runEveAgentModelFlow({ appRoot, prompter, serverUrl: "http://127.0.0.1:2000" });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
   assert.match(message, /gpt-5\.6-sol@xhigh.*fast/);
+  const modelRequest = requests.find((request) => request.message === "Choose a model");
+  assert.equal(modelRequest?.search, true);
+  assert.equal((modelRequest?.options as unknown[]).length >= 20, true);
   const config = JSON.parse(await readFile(path.join(home, "config.json"), "utf8"));
   assert.deepEqual(config, {
     version: 1,

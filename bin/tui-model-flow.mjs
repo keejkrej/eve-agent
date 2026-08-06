@@ -1,7 +1,8 @@
-import { chmod, mkdir, readFile, rename, utimes, writeFile } from "node:fs/promises";
+import { chmod, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
+import { writeActiveSettingsFile } from "./active-settings-file.mjs";
 
 const MODEL_OPTIONS = [
   { value: "chatgpt/gpt-5.6-sol", label: "chatgpt/gpt-5.6-sol", description: "ChatGPT subscription · balanced coding model" },
@@ -11,8 +12,26 @@ const MODEL_OPTIONS = [
   { value: "xai/grok-code-fast-1", label: "xai/grok-code-fast-1", description: "SuperGrok/X Premium OAuth" },
   { value: "xai/grok-4.20-0309-reasoning", label: "xai/grok-4.20-0309-reasoning", description: "SuperGrok/X Premium OAuth" },
   { value: "xai/grok-4.5", label: "xai/grok-4.5", description: "SuperGrok/X Premium OAuth" },
+  { value: "ollama-cloud/deepseek-v4-flash", label: "ollama-cloud/deepseek-v4-flash", description: "Ollama Cloud" },
+  { value: "ollama-cloud/deepseek-v4-flash:0731", label: "ollama-cloud/deepseek-v4-flash:0731", description: "Ollama Cloud" },
+  { value: "ollama-cloud/deepseek-v4-pro", label: "ollama-cloud/deepseek-v4-pro", description: "Ollama Cloud" },
+  { value: "ollama-cloud/gemma4:31b", label: "ollama-cloud/gemma4:31b", description: "Ollama Cloud" },
+  { value: "ollama-cloud/glm-5.1", label: "ollama-cloud/glm-5.1", description: "Ollama Cloud" },
+  { value: "ollama-cloud/glm-5.2", label: "ollama-cloud/glm-5.2", description: "Ollama Cloud" },
   { value: "ollama-cloud/gpt-oss:120b", label: "ollama-cloud/gpt-oss:120b", description: "Ollama Cloud" },
-  { value: "ollama-cloud/devstral-2:123b", label: "ollama-cloud/devstral-2:123b", description: "Ollama Cloud" },
+  { value: "ollama-cloud/gpt-oss:20b", label: "ollama-cloud/gpt-oss:20b", description: "Ollama Cloud" },
+  { value: "ollama-cloud/kimi-k2.5", label: "ollama-cloud/kimi-k2.5", description: "Ollama Cloud" },
+  { value: "ollama-cloud/kimi-k2.6", label: "ollama-cloud/kimi-k2.6", description: "Ollama Cloud" },
+  { value: "ollama-cloud/kimi-k2.7-code", label: "ollama-cloud/kimi-k2.7-code", description: "Ollama Cloud" },
+  { value: "ollama-cloud/kimi-k3", label: "ollama-cloud/kimi-k3", description: "Ollama Cloud" },
+  { value: "ollama-cloud/minimax-m2.5", label: "ollama-cloud/minimax-m2.5", description: "Ollama Cloud" },
+  { value: "ollama-cloud/minimax-m2.7", label: "ollama-cloud/minimax-m2.7", description: "Ollama Cloud" },
+  { value: "ollama-cloud/minimax-m3", label: "ollama-cloud/minimax-m3", description: "Ollama Cloud" },
+  { value: "ollama-cloud/mistral-large-3:675b", label: "ollama-cloud/mistral-large-3:675b", description: "Ollama Cloud" },
+  { value: "ollama-cloud/nemotron-3-nano:30b", label: "ollama-cloud/nemotron-3-nano:30b", description: "Ollama Cloud" },
+  { value: "ollama-cloud/nemotron-3-super", label: "ollama-cloud/nemotron-3-super", description: "Ollama Cloud" },
+  { value: "ollama-cloud/nemotron-3-ultra", label: "ollama-cloud/nemotron-3-ultra", description: "Ollama Cloud" },
+  { value: "ollama-cloud/qwen3.5:397b", label: "ollama-cloud/qwen3.5:397b", description: "Ollama Cloud" },
 ];
 const REASONING_OPTIONS = ["provider-default", "none", "minimal", "low", "medium", "high", "xhigh"];
 
@@ -37,7 +56,38 @@ function summary(draft) {
   return `${draft.model ?? "gateway"}@${draft.reasoning ?? "high"}${draft.priority ? " ↯ fast" : " normal"}`;
 }
 
-export async function runEveAgentModelFlow({ appRoot, prompter, argument = "" }) {
+async function readLiveAgent(serverUrl) {
+  if (!serverUrl) return undefined;
+  try {
+    const response = await fetch(new URL("/eve/v1/info", serverUrl), { signal: AbortSignal.timeout(1_500) });
+    if (response.ok) return (await response.json())?.agent;
+  } catch {
+    // The local server may be between generations.
+  }
+}
+
+async function waitForRebuild(serverUrl, draft, previousAppRoot) {
+  if (!serverUrl) return false;
+  const [provider, ...modelParts] = draft.model.split("/");
+  const expectedProvider = provider === "chatgpt" ? "openai" : provider;
+  const expectedModel = `${expectedProvider}/${modelParts.join("/")}`;
+  const deadline = Date.now() + 15_000;
+  while (Date.now() < deadline) {
+    try {
+      const agent = await readLiveAgent(serverUrl);
+      const generationChanged = previousAppRoot === undefined || agent?.appRoot !== previousAppRoot;
+      if (generationChanged && agent?.model?.id === expectedModel && agent?.model?.reasoning === draft.reasoning) {
+        return true;
+      }
+    } catch {
+      // Rebuilds briefly replace the local server generation; retry until ready.
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  return false;
+}
+
+export async function runEveAgentModelFlow({ appRoot, prompter, argument = "", serverUrl }) {
   const current = await readConfig();
   const draft = {
     model: current.model ?? "chatgpt/gpt-5.6-sol",
@@ -45,11 +95,13 @@ export async function runEveAgentModelFlow({ appRoot, prompter, argument = "" })
     priority: current.priority === true,
   };
   const save = async () => {
+    const previousAppRoot = (await readLiveAgent(serverUrl))?.appRoot;
     await writeConfig({ ...current, ...draft });
-    const agentSource = path.join(appRoot, "agent", "agent.ts");
-    const now = new Date();
-    await utimes(agentSource, now, now);
-    return `Selected ${summary(draft)}. Live on your next prompt.`;
+    await writeActiveSettingsFile(appRoot, draft);
+    const rebuilt = await waitForRebuild(serverUrl, draft, previousAppRoot);
+    return rebuilt
+      ? `Selected ${summary(draft)}.`
+      : `Selected ${summary(draft)}. Eve is still rebuilding; the footer will update shortly.`;
   };
   if (argument.trim()) {
     draft.model = argument.trim();
@@ -78,6 +130,8 @@ export async function runEveAgentModelFlow({ appRoot, prompter, argument = "" })
         message: "Choose a model",
         options: MODEL_OPTIONS,
         initialValue: draft.model,
+        search: true,
+        placeholder: "type a partial model name to filter",
       });
       if (!draft.model.startsWith("chatgpt/")) draft.priority = false;
     } else if (row === "reasoning") {
