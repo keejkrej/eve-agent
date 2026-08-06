@@ -1,0 +1,43 @@
+{
+  "name": "eve-coding-agent",
+  "version": "0.0.0",
+  "type": "module",
+  "imports": {
+    "#*": "./agent/*",
+    "#evals/*": "./evals/*"
+  },
+  "scripts": {
+    "build": "eve build",
+    "dev": "eve dev",
+    "start": "eve start",
+    "typecheck": "tsc",
+    "info": "eve info",
+    "check": "npm run typecheck && npm test && npm run build",
+    "test": "tsx --test tests/*.test.ts",
+    "agent": "node ./bin/eve-agent.mjs"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^4.0.32",
+    "@ai-sdk/openai-compatible": "^3.0.25",
+    "@vercel/connect": "0.4.3",
+    "ai": "^7.0.38",
+    "eve": "^0.30.8",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "24.x",
+    "tsx": "^4.23.9",
+    "typescript": "7.0.2"
+  },
+  "overrides": {
+    "ai": "^7.0.38"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "description": "A local, terminal-first coding agent built with Vercel Eve",
+  "private": true,
+  "bin": {
+    "eve-agent": "./bin/eve-agent.mjs"
+  }
+}
