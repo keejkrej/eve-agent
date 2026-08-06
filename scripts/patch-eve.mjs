@@ -5,6 +5,7 @@ const root = process.cwd();
 const handlerPath = path.join(root, "node_modules/eve/dist/src/cli/dev/tui/prompt-command-handler.js");
 const statusPath = path.join(root, "node_modules/eve/dist/src/cli/dev/tui/status-line.js");
 const runnerPath = path.join(root, "node_modules/eve/dist/src/cli/dev/tui/runner.js");
+const headerPath = path.join(root, "node_modules/eve/dist/src/cli/dev/tui/agent-header.js");
 
 async function patchHandler() {
   let source = await readFile(handlerPath, "utf8");
@@ -22,7 +23,7 @@ async function patchHandler() {
 async function patchStatusLine() {
   let source = await readFile(statusPath, "utf8");
   const original = 'const EXTERNAL_PROVIDER_DISPLAY_NAMES={codex:`chatgpt-sub`};';
-  const patched = 'const EXTERNAL_PROVIDER_DISPLAY_NAMES={codex:`chatgpt-sub`,openai:`chatgpt-sub`,xai:`xai-sub`,`ollama-cloud`:`ollama-cloud`};';
+  const patched = 'const EXTERNAL_PROVIDER_DISPLAY_NAMES={codex:`chatgpt-sub`,openai:`chatgpt-sub`,xai:`xai-sub`,"ollama-cloud":`ollama-cloud`};';
   if (source.includes(patched)) return;
   if (!source.includes(original)) throw new Error("Unsupported Eve status line; update scripts/patch-eve.mjs");
   await writeFile(statusPath, source.replace(original, patched));
@@ -37,7 +38,17 @@ async function patchRunner() {
   await writeFile(runnerPath, source.replace(original, patched));
 }
 
+async function patchHeaderTips() {
+  let source = await readFile(headerPath, "utf8");
+  const original = 'const AGENT_HEADER_TIPS=[`Use /add to install integrations from the registry.`,`Use /deploy to see your agent go live.`,`Type /help to see every command.`];';
+  const patched = 'const AGENT_HEADER_TIPS=[`Use /model to switch model, thinking, and speed.`,`Use /traces to inspect a run.`,`Type /help to see every command.`];';
+  if (source.includes(patched)) return;
+  if (!source.includes(original)) throw new Error("Unsupported Eve header tips; update scripts/patch-eve.mjs");
+  await writeFile(headerPath, source.replace(original, patched));
+}
+
 await patchHandler();
 await patchStatusLine();
 await patchRunner();
+await patchHeaderTips();
 console.log("Patched Eve TUI with eve-agent model controls.");
