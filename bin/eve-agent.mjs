@@ -14,7 +14,7 @@ if (major < 24) {
 }
 
 const agentRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const commands = new Set(["login", "logout", "model", "models", "auth", "help", "--help", "-h"]);
+const commands = new Set(["login", "logout", "model", "models", "auth", "plugin", "help", "--help", "-h"]);
 const inputArgs = process.argv.slice(2);
 
 function runChild(command, args, options = {}) {

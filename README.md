@@ -120,3 +120,21 @@ npm run info
 ```
 
 The coding behavior is in `agent/instructions.md`; host tools live under `agent/tools/`, and model/OAuth integration lives under `src/models/`. `scripts/patch-eve.mjs` installs the TUI integration and intentionally fails fast if a future Eve release changes the patched internals.
+
+## Plugins
+
+Install, list, or remove Eve extension packages with the wrapper:
+
+```bash
+eve-agent plugin install <package-or-path> [namespace]
+eve-agent plugin list
+eve-agent plugin remove <namespace-or-package>
+```
+
+This repository mounts the local Prime Agent extension as `prime`, which contributes `prime__ipython` and continual harness instructions:
+
+```bash
+eve-agent plugin install ../prime-agent/packages/eve-extension prime
+```
+
+Plugin packages run with the Eve server's host permissions. Review their source before installing them.

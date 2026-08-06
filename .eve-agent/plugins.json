@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "plugins": [
+    {
+      "namespace": "prime",
+      "packageName": "@earendil-works/prime-agent-eve",
+      "source": "../prime-agent/packages/eve-extension",
+      "dependencies": [
+        "@earendil-works/pi-coding-agent"
+      ],
+      "externalDependencies": [
+        "@earendil-works/pi-coding-agent",
+        "zeromq"
+      ]
+    }
+  ]
+}

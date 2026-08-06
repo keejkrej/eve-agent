@@ -1,5 +1,6 @@
 import { defineAgent } from "eve";
 import { activeSettings } from "./lib/active-settings.generated.js";
+import { pluginExternalDependencies } from "./lib/plugin-settings.js";
 import { resolveCustomModel } from "../src/models/providers.js";
 
 const configured = await resolveCustomModel(
@@ -17,6 +18,7 @@ const modelOptions = configured && typeof configured === "object"
   : undefined;
 
 export default defineAgent({
+  build: { externalDependencies: [...pluginExternalDependencies] },
   model,
   modelContextWindowTokens,
   modelOptions,
