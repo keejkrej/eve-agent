@@ -17,7 +17,7 @@ function usage(): never {
 
 Examples:
   eve-agent login chatgpt
-  eve-agent model chatgpt/gpt-5.6
+  eve-agent model chatgpt/gpt-5.6-sol
   eve-agent --model xai/grok-code-fast-1 .
   eve-agent login ollama-cloud
   eve-agent model ollama-cloud/gpt-oss:120b`);

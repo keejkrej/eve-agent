@@ -29,7 +29,7 @@ Choose one model provider:
 
 ```sh
 eve-agent login chatgpt
-eve-agent model chatgpt/gpt-5.6
+eve-agent model chatgpt/gpt-5.6-sol
 ```
 
 This opens OpenAI's OAuth flow and uses the ChatGPT Codex backend. A ChatGPT plan with Codex access is required; an OpenAI API key is not used.
@@ -87,13 +87,15 @@ Configuration and credentials are stored under `~/.config/eve-agent/`. Directori
 
 > **Provider caveat:** ChatGPT subscription and SuperGrok OAuth use public-client flows and service endpoints modeled after Prime Agent's implementations. These endpoints are not stable public API contracts and providers may change or restrict them. Ensure your use complies with the provider's terms.
 
-Because model selection is dynamic, Eve's built-in `/model` source editor is not used for switching providers. Use `eve-agent model ...` instead.
+Run `/model` inside the Eve TUI to choose the model, thinking level, and Normal/Fast service tier. Fast maps to ChatGPT's priority service tier and is shown with `↯` in the footer. The selection is persisted and triggers an Eve rebuild for the next prompt.
+
+The project applies a narrow postinstall patch to Eve 0.30.8 so its built-in `/model` command opens this subscription-aware picker instead of the AI Gateway-only source editor. `eve-agent model ...` remains available outside the TUI.
 
 ## TUI commands
 
 Useful Eve commands include:
 
-- `eve-agent model ...` — choose the model/provider before starting the TUI (`/model` is unavailable for this dynamic configuration)
+- `/model` — choose model, thinking level, and Normal/Fast tier
 - `/traces` — inspect the local trace viewer
 - `/compact` — compact a long session
 - `/clear` or `/new` — clear model history
@@ -115,4 +117,4 @@ npm run build
 npm run info
 ```
 
-The coding behavior is in `agent/instructions.md`; host tools live under `agent/tools/`, and model/OAuth integration lives under `src/models/`.
+The coding behavior is in `agent/instructions.md`; host tools live under `agent/tools/`, and model/OAuth integration lives under `src/models/`. `scripts/patch-eve.mjs` installs the TUI integration and intentionally fails fast if a future Eve release changes the patched internals.

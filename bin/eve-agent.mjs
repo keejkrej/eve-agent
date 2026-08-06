@@ -66,6 +66,10 @@ if (commands.has(inputArgs[0])) {
 
   const eve = path.join(agentRoot, "node_modules", ".bin", "eve");
   runChild(eve, ["dev"], {
-    env: { ...process.env, CODING_WORKSPACE: workspace, ...(selectedModel ? { EVE_AGENT_MODEL: selectedModel } : {}) },
+    env: {
+      ...process.env,
+      CODING_WORKSPACE: workspace,
+      ...(modelOverride ? { EVE_AGENT_MODEL_OVERRIDE: modelOverride } : {}),
+    },
   });
 }

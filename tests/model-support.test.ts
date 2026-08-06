@@ -17,7 +17,7 @@ test("resolves OAuth and Ollama selections to AI SDK v4 models", async () => {
   await setCredential("ollama-cloud", { type: "api_key", key: "ollama-key" });
 
   const cases = [
-    ["chatgpt/gpt-5.6", "openai.responses", "gpt-5.6"],
+    ["chatgpt/gpt-5.6-sol", "openai.responses", "gpt-5.6-sol"],
     ["xai/grok-code-fast-1", "xai.chat", "grok-code-fast-1"],
     ["ollama-cloud/gpt-oss:120b", "ollama-cloud.chat", "gpt-oss:120b"],
   ] as const;
@@ -29,6 +29,10 @@ test("resolves OAuth and Ollama selections to AI SDK v4 models", async () => {
     assert.equal(selection.model.modelId, modelId);
     assert.ok(selection.modelContextWindowTokens);
   }
+  const fast = await resolveCustomModel("chatgpt/gpt-5.6-sol", { priority: true });
+  assert.ok(fast && typeof fast === "object");
+  assert.equal((fast.modelOptions as any).providerOptions.openai.serviceTier, "priority");
+  assert.equal((fast.modelOptions as any).providerOptions.gateway.serviceTier, "priority");
   assert.equal(await resolveCustomModel("gateway"), null);
   assert.equal(await resolveCustomModel("anthropic/claude-opus-4.8"), "anthropic/claude-opus-4.8");
 });
@@ -47,7 +51,7 @@ test("ChatGPT transport injects OAuth identity and required Codex body fields", 
       method: "POST",
       headers: { "content-type": "application/json", "x-existing": "yes" },
       body: JSON.stringify({
-        model: "gpt-5.6",
+        model: "gpt-5.6-sol",
         stream: true,
         input: [
           { role: "developer", content: "You are a coding agent." },

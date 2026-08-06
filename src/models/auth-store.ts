@@ -12,7 +12,8 @@ export type StoredCredential =
   | { type: "api_key"; key: string };
 
 type AuthFile = { version: 1; providers: Partial<Record<AuthProvider, StoredCredential>> };
-type ConfigFile = { version: 1; model?: string };
+export type ReasoningLevel = "provider-default" | "none" | "minimal" | "low" | "medium" | "high" | "xhigh";
+export type ConfigFile = { version: 1; model?: string; reasoning?: ReasoningLevel; priority?: boolean };
 
 function homeDirectory(): string {
   return process.env.EVE_AGENT_HOME?.trim() || path.join(os.homedir(), ".config", "eve-agent");
@@ -53,11 +54,14 @@ export async function getCredential(provider: AuthProvider): Promise<StoredCrede
 export async function readConfig(): Promise<ConfigFile> {
   return readJson(configFilePath(), { version: 1 });
 }
+export async function writeConfig(config: ConfigFile): Promise<void> {
+  await writePrivateJson(configFilePath(), { ...config, version: 1 });
+}
 export async function setSelectedModel(model: string | undefined): Promise<void> {
   const config = await readConfig();
   if (model) config.model = model;
   else delete config.model;
-  await writePrivateJson(configFilePath(), config);
+  await writeConfig(config);
 }
 
 const refreshes = new Map<AuthProvider, Promise<OAuthCredentials>>();

@@ -4,7 +4,7 @@ import type { LanguageModel } from "ai";
 import { getAccessToken, getApiKey, refreshAfterUnauthorized } from "./auth-store.js";
 
 export const DEFAULT_MODELS = {
-  chatgpt: "gpt-5.6",
+  chatgpt: "gpt-5.6-sol",
   xai: "grok-code-fast-1",
   "ollama-cloud": "gpt-oss:120b",
 } as const;
@@ -79,7 +79,10 @@ export function withAuthorizedFetch(provider: "chatgpt" | "xai"): typeof fetch {
   };
 }
 
-export async function resolveCustomModel(value: string | undefined): Promise<ModelSelection | string | null> {
+export async function resolveCustomModel(
+  value: string | undefined,
+  settings: { priority?: boolean } = {},
+): Promise<ModelSelection | string | null> {
   if (!value || value === "gateway") return null;
   const parsed = parseSelection(value);
   if (!parsed) throw new Error(`Invalid model reference ${value}; expected provider/model-id`);
@@ -95,7 +98,13 @@ export async function resolveCustomModel(value: string | undefined): Promise<Mod
       modelContextWindowTokens: 400_000,
       modelOptions: {
         providerOptions: {
-          openai: { store: false, include: ["reasoning.encrypted_content"], reasoningSummary: "auto" },
+          openai: {
+            store: false,
+            include: ["reasoning.encrypted_content"],
+            reasoningSummary: "auto",
+            serviceTier: settings.priority ? "priority" : "default",
+          },
+          ...(settings.priority ? { gateway: { serviceTier: "priority" } } : {}),
         },
       },
     };

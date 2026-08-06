@@ -14,7 +14,8 @@
     "info": "eve info",
     "check": "npm run typecheck && npm test && npm run build",
     "test": "tsx --test tests/*.test.ts",
-    "agent": "node ./bin/eve-agent.mjs"
+    "agent": "node ./bin/eve-agent.mjs",
+    "postinstall": "node scripts/patch-eve.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.32",
