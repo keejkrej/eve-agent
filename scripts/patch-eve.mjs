@@ -1,9 +1,10 @@
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import os from "node:os";
 import { writeActiveSettingsFile } from "../bin/active-settings-file.mjs";
 
-const root = process.cwd();
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const handlerPath = path.join(root, "node_modules/eve/dist/src/cli/dev/tui/prompt-command-handler.js");
 const statusPath = path.join(root, "node_modules/eve/dist/src/cli/dev/tui/status-line.js");
 const runnerPath = path.join(root, "node_modules/eve/dist/src/cli/dev/tui/runner.js");

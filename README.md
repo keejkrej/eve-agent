@@ -19,7 +19,7 @@ A terminal-first coding agent built on [Vercel Eve](https://eve.dev). It uses Ev
 ## Install
 
 ```sh
-vp i -g --node 24 'eve-agent@https://github.com/keejkrej/eve-agent/archive/refs/tags/v0.1.0.tar.gz'
+vp i -g --node 24 'eve-agent@https://github.com/keejkrej/eve-agent/archive/refs/tags/v0.1.1.tar.gz'
 ```
 
 ## Development setup
