@@ -4,6 +4,7 @@ import { stdin, stdout } from "node:process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { writeActiveSettingsFile } from "./active-settings-file.mjs";
+import { buildAgent } from "./prebuilt-runtime.mjs";
 import { getCredential, readConfig, setCredential, setSelectedModel, type AuthProvider } from "../src/models/auth-store.js";
 import { loginOpenAICodex } from "../src/models/oauth/openai-codex.js";
 import { loginXai } from "../src/models/oauth/xai.js";
@@ -112,6 +113,8 @@ async function login(provider: AuthProvider): Promise<void> {
     await setSelectedModel(model);
     console.log(`Selected default model: ${model}`);
   }
+  await writeActiveSettingsFile(APP_ROOT, await readConfig());
+  await buildAgent(APP_ROOT);
 }
 
 async function status(): Promise<void> {
@@ -133,6 +136,7 @@ async function main(): Promise<void> {
     if (!argument) { console.log((await readConfig()).model ?? "gateway"); return; }
     await setSelectedModel(argument === "gateway" ? undefined : argument);
     await writeActiveSettingsFile(APP_ROOT, await readConfig());
+    await buildAgent(APP_ROOT);
     console.log(`Selected model: ${argument}`);
     return;
   }

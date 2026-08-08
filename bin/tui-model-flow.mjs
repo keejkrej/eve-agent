@@ -66,7 +66,7 @@ async function readLiveAgent(serverUrl) {
   }
 }
 
-async function waitForRebuild(serverUrl, draft, previousAppRoot) {
+async function waitForRebuild(serverUrl, draft) {
   if (!serverUrl) return false;
   const [provider, ...modelParts] = draft.model.split("/");
   const expectedProvider = provider === "chatgpt" ? "openai" : provider;
@@ -75,8 +75,7 @@ async function waitForRebuild(serverUrl, draft, previousAppRoot) {
   while (Date.now() < deadline) {
     try {
       const agent = await readLiveAgent(serverUrl);
-      const generationChanged = previousAppRoot === undefined || agent?.appRoot !== previousAppRoot;
-      if (generationChanged && agent?.model?.id === expectedModel && agent?.model?.reasoning === draft.reasoning) {
+      if (agent?.model?.id === expectedModel && agent?.model?.reasoning === draft.reasoning) {
         return true;
       }
     } catch {
@@ -95,10 +94,9 @@ export async function runEveAgentModelFlow({ appRoot, prompter, argument = "", s
     priority: current.priority === true,
   };
   const save = async () => {
-    const previousAppRoot = (await readLiveAgent(serverUrl))?.appRoot;
     await writeConfig({ ...current, ...draft });
     await writeActiveSettingsFile(appRoot, draft);
-    const rebuilt = await waitForRebuild(serverUrl, draft, previousAppRoot);
+    const rebuilt = await waitForRebuild(serverUrl, draft);
     return rebuilt
       ? `Selected ${summary(draft)}.`
       : `Selected ${summary(draft)}. Eve is still rebuilding; the footer will update shortly.`;

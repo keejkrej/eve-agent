@@ -14,5 +14,7 @@ export async function writeActiveSettingsFile(appRoot, config) {
   const temporary = `${file}.${randomUUID()}.tmp`;
   await writeFile(temporary, source, "utf8");
   await rename(temporary, file);
+  const reloadRuntime = globalThis[Symbol.for("eve-agent/settings-changed")];
+  if (typeof reloadRuntime === "function") await reloadRuntime(settings);
   return settings;
 }

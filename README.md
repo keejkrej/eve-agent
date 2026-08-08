@@ -23,6 +23,8 @@ npm install
 npm link
 ```
 
+`npm install` builds the runtime once. The installed `eve-agent` command serves that prebuilt `.output` artifact and does not invoke Eve's development builder on startup. Changing the model explicitly rebuilds the configured artifact.
+
 Choose one model provider:
 
 ### ChatGPT Plus/Pro subscription
@@ -114,6 +116,7 @@ This host bridge intentionally trades away Eve's default sandbox boundary to pro
 ## Development
 
 ```sh
+npm run dev
 npm run typecheck
 npm run build
 npm run info
