@@ -1,8 +1,9 @@
 import { spawn } from "node:child_process";
 
-if (process.env.npm_config_global !== "true") {
-  // npm prepares Git dependencies with a non-global install before packing
-  // them. The actual `vp i -g` installation runs this script again globally.
+const preparingGitDependency = /[\\/]_cacache[\\/]tmp[\\/]git-clone[^\\/]*$/.test(process.cwd());
+if (preparingGitDependency) {
+  // npm prepares Git dependencies in a cache clone before packing them. The
+  // actual `vp i -g` installation runs this script again from its final path.
   console.log("Deferring Eve Agent runtime build to the global installation.");
   process.exit(0);
 }
