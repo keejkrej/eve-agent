@@ -1,6 +1,6 @@
 {
   "name": "eve-agent",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "imports": {
     "#*": "./agent/*",
@@ -15,7 +15,8 @@
     "check": "npm run typecheck && npm test && npm run build",
     "test": "tsx --test tests/*.test.ts",
     "agent": "node ./bin/eve-agent.mjs",
-    "postinstall": "node scripts/patch-eve.mjs && npm run build"
+    "postinstall": "node scripts/install-runtime.mjs",
+    "prepare": "node scripts/patch-eve.mjs && npm run build"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.32",
@@ -40,5 +41,14 @@
   "private": true,
   "bin": {
     "eve-agent": "./bin/eve-agent.mjs"
-  }
+  },
+  "files": [
+    ".output",
+    "agent",
+    "bin",
+    "scripts",
+    "src",
+    "README.md",
+    "THIRD_PARTY_NOTICES.md"
+  ]
 }

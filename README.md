@@ -16,7 +16,13 @@ A terminal-first coding agent built on [Vercel Eve](https://eve.dev). It uses Ev
 - A supported model credential: ChatGPT subscription OAuth, xAI subscription OAuth, Ollama Cloud API key, or Vercel AI Gateway
 - `git` and `rg` (ripgrep) on the host for the best experience
 
-## Setup
+## Install
+
+```sh
+vp i -g --node 24 git+https://github.com/keejkrej/eve-agent.git#v0.1.0
+```
+
+## Development setup
 
 ```sh
 npm install

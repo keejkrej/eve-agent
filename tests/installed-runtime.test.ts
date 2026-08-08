@@ -16,7 +16,9 @@ test("installed launcher serves prebuilt output instead of invoking Eve dev", as
   assert.match(launcher, /runPrebuiltAgent/);
   assert.match(runtime, /\["start", "--host"/);
   assert.match(runtime, /\.output/);
-  assert.match(manifest.scripts.postinstall, /npm run build/);
+  assert.equal(manifest.scripts.postinstall, "node scripts/install-runtime.mjs");
+  assert.match(manifest.scripts.prepare, /npm run build/);
+  assert.ok(manifest.files.includes(".output"));
 });
 
 test("installed runtime fails clearly when installation produced no build", async () => {
