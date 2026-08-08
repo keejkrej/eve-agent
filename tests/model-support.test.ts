@@ -3,6 +3,7 @@ import { mkdtemp } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { oauthErrorHtml, oauthSuccessHtml } from "../src/models/oauth/oauth-page.js";
 import { getCredential, setCredential } from "../src/models/auth-store.ts";
 import { resolveCustomModel, withAuthorizedFetch } from "../src/models/providers.ts";
 
@@ -135,4 +136,13 @@ test("ChatGPT transport refreshes OAuth and updates the account identity after a
       account: "new-account",
     });
   } finally { globalThis.fetch = originalFetch; }
+});
+
+
+test("OAuth loopback pages use only Eve Agent branding", () => {
+  const pages = [oauthSuccessHtml("Done"), oauthErrorHtml("Failed", "details")];
+  for (const page of pages) {
+    assert.match(page, /Eve Agent/);
+    assert.doesNotMatch(page, /Prime|butterfly|earendil/i);
+  }
 });

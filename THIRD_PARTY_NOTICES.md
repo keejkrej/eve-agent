@@ -1,9 +1,11 @@
 # Third-party notices
 
-OAuth protocol implementations under `src/models/oauth/` are adapted from
-[`PrimeIntellect-ai/prime-agent`](https://github.com/PrimeIntellect-ai/prime-agent),
-branch `feat/ollama-cloud-supergrok-oauth`, commit
-`32e2d04105ec4eb5b8341081f2bb969e619c1fec`.
+The ChatGPT/OpenAI Codex OAuth protocol implementation under
+`src/models/oauth/` is based on the `pi-coding-agent` implementation in
+[`badlogic/pi-mono`](https://github.com/badlogic/pi-mono/tree/main/packages/coding-agent).
+That project is distributed under the MIT License. Copyright (c) 2025 Mario
+Zechner and contributors.
 
-That project is distributed under the MIT License. Copyright (c) 2025 Mario Zechner
-and contributors. See the upstream repository for its full license text.
+The xAI device authorization implementation was informed by
+[OpenCode](https://github.com/sst/opencode). No Prime Agent package, runtime,
+branding, or loopback-page asset is included in Eve Agent.
