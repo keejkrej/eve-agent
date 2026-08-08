@@ -70,7 +70,7 @@ if (commands.has(inputArgs[0])) {
   console.log("Warning: this agent's tools can edit files and execute commands here with your host permissions.\n");
 
   try {
-    await runPrebuiltAgent({ agentRoot, workspace });
+    await runPrebuiltAgent({ agentRoot, workspace, settings: { ...modelConfig, model: selectedModel } });
   } finally {
     if (modelOverride) {
       await writeActiveSettingsFile(agentRoot, modelConfig);

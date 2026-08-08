@@ -6,6 +6,14 @@ import { pathToFileURL } from "node:url";
 
 const SETTINGS_CHANGED = Symbol.for("eve-agent/settings-changed");
 
+export function settingsEnvironment(settings = {}) {
+  return {
+    ...(settings.model ? { EVE_AGENT_MODEL_OVERRIDE: settings.model } : {}),
+    ...(settings.reasoning ? { EVE_AGENT_REASONING_OVERRIDE: settings.reasoning } : {}),
+    ...(typeof settings.priority === "boolean" ? { EVE_AGENT_PRIORITY_OVERRIDE: String(settings.priority) } : {}),
+  };
+}
+
 function availablePort() {
   return new Promise((resolve, reject) => {
     const socket = net.createServer();
@@ -69,7 +77,7 @@ export async function buildAgent(agentRoot, { quiet = false } = {}) {
   });
 }
 
-export async function runPrebuiltAgent({ agentRoot, workspace }) {
+export async function runPrebuiltAgent({ agentRoot, workspace, settings = {} }) {
   const outputRoot = path.join(agentRoot, ".output");
   const output = path.join(outputRoot, "server", "index.mjs");
   try { await access(output); }
@@ -88,13 +96,14 @@ export async function runPrebuiltAgent({ agentRoot, workspace }) {
   const port = await availablePort();
   const serverUrl = `http://127.0.0.1:${port}`;
   let server;
+  let runtimeSettings = settings;
   let transition = Promise.resolve();
 
   const startServer = async () => {
     const stderr = { value: "" };
     const child = spawn(eve, ["start", "--host", "127.0.0.1", "--port", String(port)], {
       cwd: agentRoot,
-      env: { ...process.env, CODING_WORKSPACE: workspace, EVE_DEV: "1" },
+      env: { ...process.env, ...settingsEnvironment(runtimeSettings), CODING_WORKSPACE: workspace, EVE_DEV: "1" },
       stdio: ["ignore", "ignore", "pipe"],
     });
     child.stderr?.on("data", (chunk) => { stderr.value = `${stderr.value}${chunk}`.slice(-20_000); });
@@ -103,8 +112,9 @@ export async function runPrebuiltAgent({ agentRoot, workspace }) {
   };
 
   await startServer();
-  globalThis[SETTINGS_CHANGED] = () => {
+  globalThis[SETTINGS_CHANGED] = (nextSettings) => {
     transition = transition.then(async () => {
+      runtimeSettings = nextSettings;
       await buildAgent(agentRoot, { quiet: true });
       await stopChild(server);
       await startServer();

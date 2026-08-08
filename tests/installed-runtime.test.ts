@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { writeActiveSettingsFile } from "../bin/active-settings-file.mjs";
-import { runPrebuiltAgent } from "../bin/prebuilt-runtime.mjs";
+import { runPrebuiltAgent, settingsEnvironment } from "../bin/prebuilt-runtime.mjs";
 
 test("installed launcher serves prebuilt output instead of invoking Eve dev", async () => {
   const [launcher, runtime, manifest] = await Promise.all([
@@ -40,4 +40,17 @@ test("saving model settings can request a supervised runtime reload", async () =
   } finally {
     delete globalThis[symbol];
   }
+});
+
+
+test("configured model settings override a stale prebuilt runtime", () => {
+  assert.deepEqual(settingsEnvironment({
+    model: "ollama-cloud/deepseek-v4-flash:0731",
+    reasoning: "high",
+    priority: false,
+  }), {
+    EVE_AGENT_MODEL_OVERRIDE: "ollama-cloud/deepseek-v4-flash:0731",
+    EVE_AGENT_REASONING_OVERRIDE: "high",
+    EVE_AGENT_PRIORITY_OVERRIDE: "false",
+  });
 });

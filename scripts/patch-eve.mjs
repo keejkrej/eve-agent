@@ -9,6 +9,22 @@ const handlerPath = path.join(root, "node_modules/eve/dist/src/cli/dev/tui/promp
 const statusPath = path.join(root, "node_modules/eve/dist/src/cli/dev/tui/status-line.js");
 const runnerPath = path.join(root, "node_modules/eve/dist/src/cli/dev/tui/runner.js");
 const headerPath = path.join(root, "node_modules/eve/dist/src/cli/dev/tui/agent-header.js");
+const authoredModuleLoaderPath = path.join(root, "node_modules/eve/dist/src/internal/authored-module-loader.js");
+
+
+async function patchAuthoredModuleLoader() {
+  let source = await readFile(authoredModuleLoaderPath, "utf8");
+  const originalImport = 'import{createHash}from"node:crypto";';
+  const patchedImport = 'import{createHash}from"node:crypto";import{pathToFileURL}from"node:url";';
+  const originalFunction = "function createFileImportSpecifier(e){let t=e.replaceAll(`\\\\`,`/`);return/^[A-Za-z]:\\//.test(t)?`file:///${encodeURI(t)}`:t.startsWith(`/`)?`file://${encodeURI(t)}`:t}";
+  const patchedFunction = 'function createFileImportSpecifier(e){return pathToFileURL(e).href}';
+  if (source.includes(patchedFunction)) return;
+  if (!source.includes(originalImport) || !source.includes(originalFunction)) {
+    throw new Error("Unsupported Eve authored module loader; update scripts/patch-eve.mjs");
+  }
+  source = source.replace(originalImport, patchedImport).replace(originalFunction, patchedFunction);
+  await writeFile(authoredModuleLoaderPath, source);
+}
 
 async function patchHandler() {
   let source = await readFile(handlerPath, "utf8");
@@ -56,6 +72,7 @@ async function patchHeaderTips() {
   await writeFile(headerPath, source.replace(original, patched));
 }
 
+await patchAuthoredModuleLoader();
 await patchHandler();
 await patchStatusLine();
 await patchRunner();

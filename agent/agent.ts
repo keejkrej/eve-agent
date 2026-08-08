@@ -2,9 +2,20 @@ import { defineAgent } from "eve";
 import { activeSettings } from "./lib/active-settings.generated.js";
 import { resolveCustomModel } from "../src/models/providers.js";
 
+const reasoningLevels = ["provider-default", "none", "minimal", "low", "medium", "high", "xhigh"] as const;
+type ReasoningLevel = typeof reasoningLevels[number];
+function isReasoningLevel(value: string | undefined): value is ReasoningLevel {
+  return reasoningLevels.some((level) => level === value);
+}
+
+const reasoningOverride = process.env.EVE_AGENT_REASONING_OVERRIDE;
+const reasoning = isReasoningLevel(reasoningOverride) ? reasoningOverride : activeSettings.reasoning;
+const priority = process.env.EVE_AGENT_PRIORITY_OVERRIDE === undefined
+  ? activeSettings.priority
+  : process.env.EVE_AGENT_PRIORITY_OVERRIDE === "true";
 const configured = await resolveCustomModel(
   process.env.EVE_AGENT_MODEL_OVERRIDE ?? activeSettings.model,
-  { priority: activeSettings.priority },
+  { priority },
 );
 const model = configured && typeof configured === "object"
   ? configured.model
@@ -20,6 +31,6 @@ export default defineAgent({
   model,
   modelContextWindowTokens,
   modelOptions,
-  reasoning: activeSettings.reasoning,
+  reasoning,
   compaction: { thresholdPercent: 0.75 },
 });

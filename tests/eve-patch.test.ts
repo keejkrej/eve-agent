@@ -26,7 +26,8 @@ test("installed Eve TUI uses subscription controls without mandatory Vercel warn
 test("packaged Eve patch targets its installation when launched from another workspace", async () => {
   const packageRoot = await mkdtemp(path.join(os.tmpdir(), "eve-agent-package-"));
   const workspace = await mkdtemp(path.join(os.tmpdir(), "eve-agent-workspace-"));
-  const tui = path.join(packageRoot, "node_modules", "eve", "dist", "src", "cli", "dev", "tui");
+  const eveDist = path.join(packageRoot, "node_modules", "eve", "dist", "src");
+  const tui = path.join(eveDist, "cli", "dev", "tui");
   await mkdir(path.join(packageRoot, "scripts"), { recursive: true });
   await mkdir(path.join(packageRoot, "bin"), { recursive: true });
   await mkdir(tui, { recursive: true });
@@ -40,6 +41,9 @@ test("packaged Eve patch targets its installation when launched from another wor
     'function authIssueForStatus(e){if(e===`logged-out`)return LOGIN_SETUP_ISSUE;if(e===`cli-missing`)return CLI_MISSING_SETUP_ISSUE}');
   await writeFile(path.join(tui, "agent-header.js"),
     'const AGENT_HEADER_TIPS=[`Use /add to install integrations from the registry.`,`Use /deploy to see your agent go live.`,`Type /help to see every command.`];');
+  await mkdir(path.join(eveDist, "internal"), { recursive: true });
+  await writeFile(path.join(eveDist, "internal", "authored-module-loader.js"),
+    "import{createHash}from\"node:crypto\";function createFileImportSpecifier(e){let t=e.replaceAll(`\\\\`,`/`);return/^[A-Za-z]:\\//.test(t)?`file:///${encodeURI(t)}`:t.startsWith(`/`)?`file://${encodeURI(t)}`:t}");
 
   const result = spawnSync(process.execPath, [path.join(packageRoot, "scripts", "patch-eve.mjs")], {
     cwd: workspace,
@@ -50,5 +54,8 @@ test("packaged Eve patch targets its installation when launched from another wor
   assert.equal(result.status, 0, result.stderr);
   assert.match(await readFile(path.join(tui, "prompt-command-handler.js"), "utf8"), /runEveAgentModelFlow/);
   assert.match(await readFile(path.join(tui, "runner.js"), "utf8"), /function authIssueForStatus\(e\)\{return\}/);
+  const loader = await readFile(path.join(eveDist, "internal", "authored-module-loader.js"), "utf8");
+  assert.match(loader, /pathToFileURL/);
+  assert.doesNotMatch(loader, /encodeURI/);
   assert.match(await readFile(path.join(packageRoot, "agent", "lib", "active-settings.generated.ts"), "utf8"), /"model": "gateway"/);
 });
