@@ -7,8 +7,9 @@ import { writeActiveSettingsFile } from "../bin/active-settings-file.mjs";
 import { runPrebuiltAgent, settingsEnvironment } from "../bin/prebuilt-runtime.mjs";
 
 test("installed launcher serves prebuilt output instead of invoking Eve dev", async () => {
-  const [launcher, runtime, manifest] = await Promise.all([
+  const [launcher, cli, runtime, manifest] = await Promise.all([
     readFile("bin/eve-agent.mjs", "utf8"),
+    readFile("bin/eve-agent-cli.ts", "utf8"),
     readFile("bin/prebuilt-runtime.mjs", "utf8"),
     readFile("package.json", "utf8").then(JSON.parse),
   ]);
@@ -16,6 +17,10 @@ test("installed launcher serves prebuilt output instead of invoking Eve dev", as
   assert.match(launcher, /runPrebuiltAgent/);
   assert.match(runtime, /\["start", "--host"/);
   assert.match(runtime, /\.output/);
+  assert.doesNotMatch(launcher, /buildAgent/);
+  assert.doesNotMatch(cli, /buildAgent/);
+  const reloadSupervisor = runtime.slice(runtime.indexOf("globalThis[SETTINGS_CHANGED]"));
+  assert.doesNotMatch(reloadSupervisor, /buildAgent/);
   assert.equal(manifest.scripts.postinstall, undefined);
   assert.equal(manifest.scripts.prepare, undefined);
   assert.ok(manifest.files.includes("dist"));

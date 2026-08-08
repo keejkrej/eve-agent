@@ -115,7 +115,6 @@ export async function runPrebuiltAgent({ agentRoot, workspace, settings = {} }) 
   globalThis[SETTINGS_CHANGED] = (nextSettings) => {
     transition = transition.then(async () => {
       runtimeSettings = nextSettings;
-      await buildAgent(agentRoot, { quiet: true });
       await stopChild(server);
       await startServer();
     });

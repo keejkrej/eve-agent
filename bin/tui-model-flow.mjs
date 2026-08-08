@@ -99,7 +99,7 @@ export async function runEveAgentModelFlow({ appRoot, prompter, argument = "", s
     const rebuilt = await waitForRebuild(serverUrl, draft);
     return rebuilt
       ? `Selected ${summary(draft)}.`
-      : `Selected ${summary(draft)}. Eve is still rebuilding; the footer will update shortly.`;
+      : `Selected ${summary(draft)}. Eve is still restarting; the footer will update shortly.`;
   };
   if (argument.trim()) {
     draft.model = argument.trim();

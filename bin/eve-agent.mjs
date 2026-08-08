@@ -5,8 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawn } from "node:child_process";
-import { writeActiveSettingsFile } from "./active-settings-file.mjs";
-import { buildAgent, runPrebuiltAgent } from "./prebuilt-runtime.mjs";
+import { runPrebuiltAgent } from "./prebuilt-runtime.mjs";
 
 const major = Number(process.versions.node.split(".")[0]);
 if (major < 24) {
@@ -60,21 +59,10 @@ if (commands.has(inputArgs[0])) {
   const home = process.env.EVE_AGENT_HOME?.trim() || path.join(os.homedir(), ".config", "eve-agent");
   try { modelConfig = { ...modelConfig, ...JSON.parse(await readFile(path.join(home, "config.json"), "utf8")) }; }
   catch (error) { if (error?.code !== "ENOENT") console.warn(`Ignoring unreadable model config: ${error.message}`); }
-  if (modelOverride) {
-    await writeActiveSettingsFile(agentRoot, { ...modelConfig, model: modelOverride });
-    await buildAgent(agentRoot);
-  }
   const selectedModel = modelOverride ?? modelConfig.model;
   console.log(`Eve Agent workspace: ${workspace}`);
   console.log(`Model: ${selectedModel ?? "Vercel AI Gateway fallback"}`);
   console.log("Warning: this agent's tools can edit files and execute commands here with your host permissions.\n");
 
-  try {
-    await runPrebuiltAgent({ agentRoot, workspace, settings: { ...modelConfig, model: selectedModel } });
-  } finally {
-    if (modelOverride) {
-      await writeActiveSettingsFile(agentRoot, modelConfig);
-      await buildAgent(agentRoot);
-    }
-  }
+  await runPrebuiltAgent({ agentRoot, workspace, settings: { ...modelConfig, model: selectedModel } });
 }
