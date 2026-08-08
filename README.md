@@ -1,4 +1,4 @@
-# Eve Coding Agent
+# Eve Agent
 
 A terminal-first coding agent built on [Vercel Eve](https://eve.dev). It uses Eve's TUI and durable sessions while exposing a selected local repository through carefully scoped host tools, so it behaves more like `pi`/Claude Code than Eve's default isolated sandbox.
 
@@ -121,20 +121,41 @@ npm run info
 
 The coding behavior is in `agent/instructions.md`; host tools live under `agent/tools/`, and model/OAuth integration lives under `src/models/`. `scripts/patch-eve.mjs` installs the TUI integration and intentionally fails fast if a future Eve release changes the patched internals.
 
-## Plugins
+## Runtime plugins
 
-Install, list, or remove Eve extension packages with the wrapper:
+Eve Agent discovers plugins when a session starts. Plugins are not installed into this application's dependencies and are not compiled as Eve extensions. Put a plugin file or directory in either:
 
-```bash
-eve-agent plugin install <package-or-path> [namespace]
-eve-agent plugin list
-eve-agent plugin remove <namespace-or-package>
+- `<workspace>/.eve-agent/plugins/`
+- `$EVE_AGENT_HOME/plugins/` (defaults to `~/.config/eve-agent/plugins/`)
+
+Additional scan directories can be supplied through `EVE_AGENT_PLUGIN_PATHS`, separated with the platform path delimiter. A plugin directory can contain `index.mjs`, `index.js`, or `index.ts`, or declare a different entry and namespace in `package.json`:
+
+```json
+{
+  "name": "@acme/eve-agent-example",
+  "eveAgent": {
+    "plugin": "./dist/plugin.mjs",
+    "namespace": "example"
+  }
+}
 ```
 
-This repository mounts the local Prime Agent extension as `prime`, which contributes `prime__ipython` and continual harness instructions:
+The entry default-exports an async-capable registration function:
 
-```bash
-eve-agent plugin install ../prime-agent/packages/eve-extension prime
+```js
+export default function activate(api) {
+  api.addInstructions("Use the echo tool when asked to repeat text.");
+  api.registerTool("echo", {
+    description: "Echo text",
+    inputSchema: yourStandardSchema,
+    execute: async ({ text }) => ({ text }),
+  });
+  api.on("session.completed", async (_event, context) => {
+    // Dispose plugin-owned session resources.
+  });
+}
 ```
 
-Plugin packages run with the Eve server's host permissions. Review their source before installing them.
+Tools are exposed as `<namespace>__<name>`. Prime Agent belongs in its own repository and can implement this interface as an external `prime` plugin; Eve Agent has no Prime Agent package dependency.
+
+Plugins are trusted in-process code with the Eve server's host permissions. Review their source before placing or linking them into a scanned directory.

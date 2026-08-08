@@ -1,5 +1,5 @@
 {
-  "name": "eve-coding-agent",
+  "name": "eve-agent",
   "version": "0.0.0",
   "type": "module",
   "imports": {
@@ -20,8 +20,6 @@
   "dependencies": {
     "@ai-sdk/openai": "^4.0.32",
     "@ai-sdk/openai-compatible": "^3.0.25",
-    "@earendil-works/pi-coding-agent": "file:../prime-agent/packages/coding-agent",
-    "@earendil-works/prime-agent-eve": "file:../prime-agent/packages/eve-extension",
     "@vercel/connect": "0.4.3",
     "ai": "^7.0.38",
     "eve": "^0.30.8",

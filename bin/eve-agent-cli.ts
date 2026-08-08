@@ -8,7 +8,6 @@ import { getCredential, readConfig, setCredential, setSelectedModel, type AuthPr
 import { loginOpenAICodex } from "../src/models/oauth/openai-codex.js";
 import { loginXai } from "../src/models/oauth/xai.js";
 import { DEFAULT_MODELS } from "../src/models/providers.js";
-import { installPlugin, listPlugins, removePlugin } from "./plugin-manager.js";
 
 const APP_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -20,17 +19,13 @@ function usage(): never {
   eve-agent model [provider/model|gateway]
   eve-agent models
   eve-agent auth status
-  eve-agent plugin install <package-or-path> [namespace]
-  eve-agent plugin remove <namespace-or-package>
-  eve-agent plugin list
 
 Examples:
   eve-agent login chatgpt
   eve-agent model chatgpt/gpt-5.6-sol
   eve-agent --model xai/grok-code-fast-1 .
   eve-agent login ollama-cloud
-  eve-agent model ollama-cloud/gpt-oss:120b
-  eve-agent plugin install ~/workspace/prime-agent/packages/eve-extension prime`);
+  eve-agent model ollama-cloud/gpt-oss:120b`);
   process.exit(0);
 }
 
@@ -130,7 +125,7 @@ async function status(): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  const [command, argument, pluginArgument, namespace] = process.argv.slice(2);
+  const [command, argument] = process.argv.slice(2);
   if (!command || command === "help" || command === "--help" || command === "-h") usage();
   if (command === "login") { await login(normalizeProvider(argument)); return; }
   if (command === "logout") { const provider = normalizeProvider(argument); await setCredential(provider, undefined); console.log(`Removed ${provider} credentials.`); return; }
@@ -151,24 +146,6 @@ You may replace the model-id portion with another model supported by that provid
     return;
   }
   if (command === "auth" && argument === "status") { await status(); return; }
-  if (command === "plugin") {
-    if (argument === "install") {
-      const installed = await installPlugin(APP_ROOT, pluginArgument ?? "", namespace);
-      console.log(`Installed ${installed.packageName} as ${installed.namespace}__*`);
-      return;
-    }
-    if (argument === "remove" && pluginArgument) {
-      const removed = await removePlugin(APP_ROOT, pluginArgument);
-      console.log(`Removed ${removed.packageName}`);
-      return;
-    }
-    if (argument === "list") {
-      const plugins = await listPlugins(APP_ROOT);
-      if (plugins.length === 0) console.log("No plugins installed.");
-      else for (const plugin of plugins) console.log(`${plugin.namespace.padEnd(16)} ${plugin.packageName} (${plugin.source})`);
-      return;
-    }
-  }
   usage();
 }
 
