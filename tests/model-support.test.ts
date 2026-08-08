@@ -54,9 +54,12 @@ test("ChatGPT transport injects OAuth identity and required Codex body fields", 
       body: JSON.stringify({
         model: "gpt-5.6-sol",
         stream: true,
+        previous_response_id: "resp_unpersisted",
         input: [
           { role: "developer", content: "You are a coding agent." },
           { role: "user", content: [{ type: "input_text", text: "Hello" }] },
+          { id: "msg_unpersisted", role: "assistant", content: [{ type: "output_text", text: "Hi" }] },
+          { id: "rs_unpersisted", type: "reasoning", encrypted_content: "encrypted", summary: [] },
         ],
       }),
     });
@@ -67,9 +70,14 @@ test("ChatGPT transport injects OAuth identity and required Codex body fields", 
     assert.equal(headers.get("x-existing"), "yes");
     const body = JSON.parse(String(captured.init?.body));
     assert.equal(body.store, false);
+    assert.equal(body.previous_response_id, undefined);
     assert.deepEqual(body.include, ["reasoning.encrypted_content"]);
     assert.equal(body.instructions, "You are a coding agent.");
-    assert.deepEqual(body.input, [{ role: "user", content: [{ type: "input_text", text: "Hello" }] }]);
+    assert.deepEqual(body.input, [
+      { role: "user", content: [{ type: "input_text", text: "Hello" }] },
+      { role: "assistant", content: [{ type: "output_text", text: "Hi" }] },
+      { type: "reasoning", encrypted_content: "encrypted", summary: [] },
+    ]);
   } finally { globalThis.fetch = originalFetch; }
 });
 

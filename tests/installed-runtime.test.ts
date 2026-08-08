@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { writeActiveSettingsFile } from "../bin/active-settings-file.mjs";
-import { relocatePrebuiltRuntime, runPrebuiltAgent, settingsEnvironment } from "../bin/prebuilt-runtime.mjs";
+import { relocatePrebuiltRuntime, runPrebuiltAgent, runtimeMatchesSettings, settingsEnvironment } from "../bin/prebuilt-runtime.mjs";
 
 test("installed launcher serves prebuilt output instead of invoking Eve dev", async () => {
   const [launcher, cli, runtime, manifest] = await Promise.all([
@@ -20,7 +20,7 @@ test("installed launcher serves prebuilt output instead of invoking Eve dev", as
   assert.doesNotMatch(launcher, /buildAgent/);
   assert.doesNotMatch(cli, /buildAgent/);
   const reloadSupervisor = runtime.slice(runtime.indexOf("globalThis[SETTINGS_CHANGED]"));
-  assert.doesNotMatch(reloadSupervisor, /buildAgent/);
+  assert.match(reloadSupervisor, /buildAgent/);
   assert.equal(manifest.scripts.postinstall, undefined);
   assert.equal(manifest.scripts.prepare, undefined);
   assert.ok(manifest.files.includes("dist"));
@@ -82,4 +82,27 @@ test("installed runtime relocates authored paths to the package root", async () 
     assert.doesNotMatch(relocated, /build-machine/);
     assert.ok(relocated.includes(installedRoot));
   }
+});
+
+test("installed runtime rebuilds when compiled model settings are stale", async () => {
+  const outputRoot = await mkdtemp(path.join(os.tmpdir(), "eve-agent-model-settings-"));
+  const manifestPath = path.join(outputRoot, ".eve", "compile", "compiled-agent-manifest.json");
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, JSON.stringify({
+    config: {
+      model: { id: "ollama-cloud/deepseek-v4-flash:0731" },
+      reasoning: "high",
+    },
+  }));
+
+  assert.equal(await runtimeMatchesSettings(outputRoot, {
+    model: "ollama-cloud/deepseek-v4-flash:0731",
+    reasoning: "high",
+    priority: false,
+  }), true);
+  assert.equal(await runtimeMatchesSettings(outputRoot, {
+    model: "xai/grok-4.5",
+    reasoning: "high",
+    priority: false,
+  }), false);
 });

@@ -39,7 +39,15 @@ export function withAuthorizedFetch(provider: "chatgpt" | "xai"): typeof fetch {
         if (typeof init?.body === "string") {
           const body = JSON.parse(init.body) as Record<string, unknown>;
           body.store = false;
+          delete body.previous_response_id;
           body.include = Array.from(new Set([...(Array.isArray(body.include) ? body.include : []), "reasoning.encrypted_content"]));
+          if (Array.isArray(body.input)) {
+            body.input = body.input.map((item) => {
+              if (typeof item !== "object" || item === null || Array.isArray(item) || !("id" in item)) return item;
+              const { id: _unpersistedItemId, ...inlineItem } = item as Record<string, unknown>;
+              return inlineItem;
+            });
+          }
           // ChatGPT's Codex endpoint expects the system prompt in `instructions`,
           // unlike the public Responses API which also accepts system/developer input items.
           if (Array.isArray(body.input)) {

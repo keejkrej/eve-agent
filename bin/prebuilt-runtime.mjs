@@ -54,7 +54,7 @@ ${stderr.value}`.trim());
 ${stderr.value}`.trim());
 }
 
-export async function buildAgent(agentRoot, { quiet = false } = {}) {
+export async function buildAgent(agentRoot, { quiet = false, settings = {} } = {}) {
   await new Promise((resolve, reject) => {
     const npm = process.env.npm_execpath && process.env.npm_execpath.endsWith(".js")
       ? process.execPath
@@ -62,7 +62,7 @@ export async function buildAgent(agentRoot, { quiet = false } = {}) {
     const args = npm === process.execPath ? [process.env.npm_execpath, "run", "build"] : ["run", "build"];
     const child = spawn(npm, args, {
       cwd: agentRoot,
-      env: process.env,
+      env: { ...process.env, ...settingsEnvironment(settings) },
       stdio: quiet ? ["ignore", "pipe", "pipe"] : "inherit",
     });
     let output = "";
@@ -82,6 +82,28 @@ const RELOCATABLE_RUNTIME_FILES = [
   [".eve", "discovery", "agent-discovery-manifest.json"],
   [".eve", "compile", "compiled-agent-manifest.json"],
 ];
+
+function expectedCompiledModelId(model) {
+  if (!model || model === "gateway") return "anthropic/claude-sonnet-5";
+  const slash = model.indexOf("/");
+  if (slash < 0) return model;
+  const provider = model.slice(0, slash);
+  const modelId = model.slice(slash + 1);
+  return `${provider === "chatgpt" || provider === "openai-codex" ? "openai" : provider}/${modelId}`;
+}
+
+export async function runtimeMatchesSettings(outputRoot, settings = {}) {
+  const manifestPath = path.join(outputRoot, ".eve", "compile", "compiled-agent-manifest.json");
+  const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  const config = manifest?.config;
+  if (config?.model?.id !== expectedCompiledModelId(settings.model)) return false;
+  if (config?.reasoning !== (settings.reasoning ?? "high")) return false;
+  if (settings.model?.startsWith("chatgpt/") || settings.model?.startsWith("openai-codex/")) {
+    const tier = config?.model?.providerOptions?.openai?.serviceTier;
+    if (tier !== (settings.priority ? "priority" : "default")) return false;
+  }
+  return true;
+}
 
 export async function relocatePrebuiltRuntime(outputRoot, agentRoot) {
   const manifestPath = path.join(outputRoot, ".eve", "compile", "compiled-agent-manifest.json");
@@ -117,6 +139,9 @@ export async function runPrebuiltAgent({ agentRoot, workspace, settings = {} }) 
   }
 
   await relocatePrebuiltRuntime(outputRoot, agentRoot);
+  if (!await runtimeMatchesSettings(outputRoot, settings)) {
+    await buildAgent(agentRoot, { quiet: true, settings });
+  }
 
   const eve = path.join(agentRoot, "node_modules", ".bin", "eve");
   const port = await availablePort();
@@ -141,6 +166,7 @@ export async function runPrebuiltAgent({ agentRoot, workspace, settings = {} }) 
   globalThis[SETTINGS_CHANGED] = (nextSettings) => {
     transition = transition.then(async () => {
       runtimeSettings = nextSettings;
+      await buildAgent(agentRoot, { quiet: true, settings: runtimeSettings });
       await stopChild(server);
       await startServer();
     });

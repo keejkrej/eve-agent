@@ -19,7 +19,7 @@ A terminal-first coding agent built on [Vercel Eve](https://eve.dev). It uses Ev
 ## Install
 
 ```sh
-vp i -g --node 24 'eve-agent@https://github.com/keejkrej/eve-agent/archive/refs/tags/v0.1.4.tar.gz'
+vp i -g --node 24 'eve-agent@https://github.com/keejkrej/eve-agent/archive/refs/tags/v0.1.5.tar.gz'
 ```
 
 ## Development setup
@@ -29,7 +29,7 @@ npm install
 npm link
 ```
 
-`npm install` builds the runtime once. The installed `eve-agent` command serves that prebuilt `.output` artifact and does not invoke Eve's development builder on startup. Model changes restart the supervised prebuilt server with runtime setting overrides; installed copies do not invoke Eve's builder.
+`npm install` ships a prebuilt `.output` artifact. The installed `eve-agent` command reuses it when its compiled model settings match; changing the model, reasoning, or speed rebuilds the artifact once and restarts the supervised server.
 
 Choose one model provider:
 
