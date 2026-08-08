@@ -1,14 +1,11 @@
-import { access } from "node:fs/promises";
-import path from "node:path";
 import { spawn } from "node:child_process";
 
-try {
-  await access(path.join(process.cwd(), ".git"));
-  // npm prepares Git dependencies in a temporary clone before their dependency
-  // tree is stable. The packed global installation runs postinstall again.
-  console.log("Deferring Eve Agent runtime build to the installed package.");
+if (process.env.npm_config_global !== "true") {
+  // npm prepares Git dependencies with a non-global install before packing
+  // them. The actual `vp i -g` installation runs this script again globally.
+  console.log("Deferring Eve Agent runtime build to the global installation.");
   process.exit(0);
-} catch {}
+}
 
 await import("./patch-eve.mjs");
 await new Promise((resolve, reject) => {
