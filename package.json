@@ -15,8 +15,7 @@
     "check": "npm run typecheck && npm test && npm run build",
     "test": "tsx --test tests/*.test.ts",
     "agent": "node ./bin/eve-agent.mjs",
-    "postinstall": "node scripts/install-runtime.mjs",
-    "prepare": "node scripts/patch-eve.mjs && npm run build"
+    "postinstall": "node scripts/install-runtime.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.32",
@@ -43,7 +42,6 @@
     "eve-agent": "./bin/eve-agent.mjs"
   },
   "files": [
-    ".output",
     "agent",
     "bin",
     "scripts",
