@@ -19,7 +19,7 @@ A terminal-first coding agent built on [Vercel Eve](https://eve.dev). It uses Ev
 ## Install
 
 ```sh
-vp i -g --node 24 'eve-agent@https://github.com/keejkrej/eve-agent/archive/refs/tags/v0.1.5.tar.gz'
+vp i -g --node 24 'eve-agent@https://github.com/keejkrej/eve-agent/archive/refs/tags/v0.1.6.tar.gz'
 ```
 
 ## Development setup
@@ -129,6 +129,8 @@ npm run info
 ```
 
 The coding behavior is in `agent/instructions.md`; host tools live under `agent/tools/`, and model/OAuth integration lives under `src/models/`. `scripts/patch-eve.mjs` installs the TUI integration and intentionally fails fast if a future Eve release changes the patched internals.
+
+Before tagging a release, follow the packed global-install and subscription E2E gate in [docs/release-testing.md](docs/release-testing.md).
 
 ## Runtime plugins
 

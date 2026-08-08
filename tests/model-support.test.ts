@@ -75,8 +75,36 @@ test("ChatGPT transport injects OAuth identity and required Codex body fields", 
     assert.equal(body.instructions, "You are a coding agent.");
     assert.deepEqual(body.input, [
       { role: "user", content: [{ type: "input_text", text: "Hello" }] },
-      { role: "assistant", content: [{ type: "output_text", text: "Hi" }] },
+      { role: "user", content: [{ type: "input_text", text: "[Previous assistant response]\nHi" }] },
       { type: "reasoning", encrypted_content: "encrypted", summary: [] },
+    ]);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test("ChatGPT model keeps continuation prompts stateless before transport", async () => {
+  await isolatedHome();
+  await setCredential("chatgpt", { type: "oauth", access: "secret-access", refresh: "refresh", expires: Date.now() + 600_000, accountId: "acct-42" });
+  const originalFetch = globalThis.fetch;
+  let body: any;
+  globalThis.fetch = async (_input, init) => {
+    body = JSON.parse(String(init?.body));
+    return new Response("data: [DONE]\n\n", { status: 200, headers: { "content-type": "text/event-stream" } });
+  };
+  try {
+    const selection = await resolveCustomModel("chatgpt/gpt-5.6-sol");
+    assert.ok(selection && typeof selection === "object");
+    await (selection.model as any).doStream({
+      prompt: [
+        { role: "user", content: [{ type: "text", text: "first" }] },
+        { role: "assistant", content: [{ type: "text", text: "answer", providerOptions: { openai: { itemId: "msg_unpersisted" } } }] },
+        { role: "user", content: [{ type: "text", text: "second" }] },
+      ],
+    });
+    assert.equal(body.store, false);
+    assert.deepEqual(body.input, [
+      { role: "user", content: [{ type: "input_text", text: "first" }] },
+      { role: "user", content: [{ type: "input_text", text: "[Previous assistant response]\nanswer" }] },
+      { role: "user", content: [{ type: "input_text", text: "second" }] },
     ]);
   } finally { globalThis.fetch = originalFetch; }
 });

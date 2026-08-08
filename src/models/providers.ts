@@ -1,6 +1,6 @@
 import { createOpenAI } from "@ai-sdk/openai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import type { LanguageModel } from "ai";
+import { defaultSettingsMiddleware, wrapLanguageModel, type LanguageModel } from "ai";
 import { getAccessToken, getApiKey, refreshAfterUnauthorized } from "./auth-store.js";
 
 export const DEFAULT_MODELS = {
@@ -43,8 +43,18 @@ export function withAuthorizedFetch(provider: "chatgpt" | "xai"): typeof fetch {
           body.include = Array.from(new Set([...(Array.isArray(body.include) ? body.include : []), "reasoning.encrypted_content"]));
           if (Array.isArray(body.input)) {
             body.input = body.input.map((item) => {
-              if (typeof item !== "object" || item === null || Array.isArray(item) || !("id" in item)) return item;
+              if (typeof item !== "object" || item === null || Array.isArray(item)) return item;
               const { id: _unpersistedItemId, ...inlineItem } = item as Record<string, unknown>;
+              if (inlineItem.role === "assistant" && Array.isArray(inlineItem.content)) {
+                return {
+                  role: "user",
+                  content: inlineItem.content.map((part) =>
+                    typeof part === "object" && part !== null && !Array.isArray(part) && part.type === "output_text"
+                      ? { type: "input_text", text: `[Previous assistant response]\n${String(part.text ?? "")}` }
+                      : part,
+                  ),
+                };
+              }
               return inlineItem;
             });
           }
@@ -101,20 +111,22 @@ export async function resolveCustomModel(
       apiKey: "oauth-managed-by-eve-agent",
       fetch: withAuthorizedFetch("chatgpt"),
     });
-    return {
-      model: provider.responses(parsed.modelId),
-      modelContextWindowTokens: 400_000,
-      modelOptions: {
-        providerOptions: {
-          openai: {
-            store: false,
-            include: ["reasoning.encrypted_content"],
-            reasoningSummary: "auto",
-            serviceTier: settings.priority ? "priority" : "default",
-          },
-          ...(settings.priority ? { gateway: { serviceTier: "priority" } } : {}),
-        },
+    const providerOptions = {
+      openai: {
+        store: false,
+        include: ["reasoning.encrypted_content"],
+        reasoningSummary: "auto",
+        serviceTier: settings.priority ? "priority" : "default",
       },
+      ...(settings.priority ? { gateway: { serviceTier: "priority" } } : {}),
+    };
+    return {
+      model: wrapLanguageModel({
+        model: provider.responses(parsed.modelId),
+        middleware: defaultSettingsMiddleware({ settings: { providerOptions } }),
+      }),
+      modelContextWindowTokens: 400_000,
+      modelOptions: { providerOptions },
     };
   }
 

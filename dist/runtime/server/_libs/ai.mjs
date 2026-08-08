@@ -7985,6 +7985,69 @@ createIdGenerator({
 	prefix: "aiobj",
 	size: 24
 });
+function defaultSettingsMiddleware({ settings }) {
+	return {
+		specificationVersion: "v4",
+		transformParams: async ({ params }) => {
+			return mergeObjects(settings, params);
+		}
+	};
+}
+var wrapLanguageModel = ({ model: inputModel, middleware: middlewareArg, modelId, providerId }) => {
+	const model = asLanguageModelV4(inputModel);
+	return [...asArray(middlewareArg)].reverse().reduce((wrappedModel, middleware) => {
+		return doWrap({
+			model: wrappedModel,
+			middleware,
+			modelId,
+			providerId
+		});
+	}, model);
+};
+var doWrap = ({ model, middleware: { transformParams, wrapGenerate, wrapStream, overrideProvider, overrideModelId, overrideSupportedUrls }, modelId, providerId }) => {
+	var _a23, _b, _c;
+	async function doTransform({ params, type }) {
+		return transformParams ? await transformParams({
+			params,
+			type,
+			model
+		}) : params;
+	}
+	return {
+		specificationVersion: "v4",
+		provider: (_a23 = providerId != null ? providerId : overrideProvider == null ? void 0 : overrideProvider({ model })) != null ? _a23 : model.provider,
+		modelId: (_b = modelId != null ? modelId : overrideModelId == null ? void 0 : overrideModelId({ model })) != null ? _b : model.modelId,
+		supportedUrls: (_c = overrideSupportedUrls == null ? void 0 : overrideSupportedUrls({ model })) != null ? _c : model.supportedUrls,
+		async doGenerate(params) {
+			const transformedParams = await doTransform({
+				params,
+				type: "generate"
+			});
+			const doGenerate = async () => await model.doGenerate(transformedParams);
+			const doStream = async () => await model.doStream(transformedParams);
+			return wrapGenerate ? await wrapGenerate({
+				doGenerate,
+				doStream,
+				params: transformedParams,
+				model
+			}) : await doGenerate();
+		},
+		async doStream(params) {
+			const transformedParams = await doTransform({
+				params,
+				type: "stream"
+			});
+			const doGenerate = async () => await model.doGenerate(transformedParams);
+			const doStream = async () => await model.doStream(transformedParams);
+			return wrapStream ? await wrapStream({
+				doGenerate,
+				doStream,
+				params: transformedParams,
+				model
+			}) : await doStream();
+		}
+	};
+};
 createIdGenerator({
 	prefix: "call",
 	size: 24
@@ -8020,4 +8083,4 @@ var MockLanguageModelV3 = class {
 	}
 };
 //#endregion
-export { getFirstChunkTimeoutMs as A, output_exports as B, convertDataContentToBase64String as C, filterActiveTools as D, createUIMessageStreamResponse as E, isDynamicToolUIPart as F, streamLanguageModelCall as G, pipeTextStreamToResponse as H, isStaticToolUIPart as I, toTextStream as J, streamText as K, isStepCount as L, getStepTimeoutMs as M, getToolTimeoutMs as N, generateText as O, getTotalTimeoutMs as P, userModelMessageSchema as Q, isToolUIPart as R, consumeStream as S, createTextStreamResponse as T, pipeUIMessageStreamToResponse as U, parsePartialJson as V, registerTelemetry as W, toUIMessageStream as X, toUIMessageChunk as Y, toolModelMessageSchema as Z, ToolLoopAgent as _, InvalidMessageRoleError as a, UnsupportedModelVersionError as b, InvalidToolInputError as c, NoObjectGeneratedError as d, NoOutputGeneratedError as f, ToolCallRepairError as g, ToolCallNotFoundForApprovalError as h, InvalidDataContentError as i, getStaticToolName as j, getChunkTimeoutMs as k, JsonToSseTransformStream as l, RetryError as m, DefaultGeneratedFile as n, InvalidToolApprovalError as o, NoSuchToolError as p, systemModelMessageSchema as q, InvalidArgumentError as r, InvalidToolApprovalSignatureError as s, MockLanguageModelV3 as t, MissingToolResultsError as u, UIMessageStreamError as v, createDownload as w, assistantModelMessageSchema as x, UI_MESSAGE_STREAM_HEADERS as y, modelMessageSchema as z };
+export { userModelMessageSchema as $, getChunkTimeoutMs as A, modelMessageSchema as B, convertDataContentToBase64String as C, defaultSettingsMiddleware as D, createUIMessageStreamResponse as E, getTotalTimeoutMs as F, registerTelemetry as G, parsePartialJson as H, isDynamicToolUIPart as I, systemModelMessageSchema as J, streamLanguageModelCall as K, isStaticToolUIPart as L, getStaticToolName as M, getStepTimeoutMs as N, filterActiveTools as O, getToolTimeoutMs as P, toolModelMessageSchema as Q, isStepCount as R, consumeStream as S, createTextStreamResponse as T, pipeTextStreamToResponse as U, output_exports as V, pipeUIMessageStreamToResponse as W, toUIMessageChunk as X, toTextStream as Y, toUIMessageStream as Z, ToolLoopAgent as _, InvalidMessageRoleError as a, UnsupportedModelVersionError as b, InvalidToolInputError as c, NoObjectGeneratedError as d, wrapLanguageModel as et, NoOutputGeneratedError as f, ToolCallRepairError as g, ToolCallNotFoundForApprovalError as h, InvalidDataContentError as i, getFirstChunkTimeoutMs as j, generateText as k, JsonToSseTransformStream as l, RetryError as m, DefaultGeneratedFile as n, InvalidToolApprovalError as o, NoSuchToolError as p, streamText as q, InvalidArgumentError as r, InvalidToolApprovalSignatureError as s, MockLanguageModelV3 as t, MissingToolResultsError as u, UIMessageStreamError as v, createDownload as w, assistantModelMessageSchema as x, UI_MESSAGE_STREAM_HEADERS as y, isToolUIPart as z };

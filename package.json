@@ -1,6 +1,6 @@
 {
   "name": "eve-agent",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "type": "module",
   "imports": {
     "#*": "./agent/*",
@@ -47,6 +47,7 @@
     "dist",
     "scripts",
     "src",
+    "docs",
     "README.md",
     "THIRD_PARTY_NOTICES.md"
   ]

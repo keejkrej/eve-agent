@@ -11,20 +11,22 @@ test("installed Eve TUI uses subscription controls without mandatory Vercel warn
   const runner = await readFile(path.join(eveTui, "runner.js"), "utf8");
   const status = await readFile(path.join(eveTui, "status-line.js"), "utf8");
   const header = await readFile(path.join(eveTui, "agent-header.js"), "utf8");
+  const applicationNitro = await readFile(path.join(process.cwd(), "node_modules", "eve", "dist", "src", "internal", "nitro", "host", "create-application-nitro.js"), "utf8");
   assert.match(handler, /runEveAgentModelFlow/);
   assert.match(handler, /serverUrl:a\.serverUrl/);
   assert.match(runner, /function authIssueForStatus\(e\)\{return\}/);
   assert.match(status, /openai:`chatgpt-sub`/);
   assert.doesNotMatch(header, /Use \/deploy/);
   assert.match(header, /Use \/model/);
+  assert.match(applicationNitro, /isAbsolute\(t\)\?normalizePath\(stripFileSystemPrefix\(t\)\)/);
   for (const file of ["prompt-command-handler.js", "runner.js", "status-line.js", "agent-header.js"]) {
     const result = spawnSync(process.execPath, ["--check", path.join(eveTui, file)], { encoding: "utf8" });
     assert.equal(result.status, 0, result.stderr);
   }
 });
 
-test("packaged Eve patch targets its installation when launched from another workspace", async () => {
-  const packageRoot = await mkdtemp(path.join(os.tmpdir(), "eve-agent-package-"));
+test("packaged Eve patch targets a #UUID installation when launched from another workspace", async () => {
+  const packageRoot = await mkdtemp(path.join(os.tmpdir(), "eve-agent#fixture-"));
   const workspace = await mkdtemp(path.join(os.tmpdir(), "eve-agent-workspace-"));
   const eveDist = path.join(packageRoot, "node_modules", "eve", "dist", "src");
   const tui = path.join(eveDist, "cli", "dev", "tui");
@@ -44,6 +46,10 @@ test("packaged Eve patch targets its installation when launched from another wor
   await mkdir(path.join(eveDist, "internal"), { recursive: true });
   await writeFile(path.join(eveDist, "internal", "authored-module-loader.js"),
     "import{createHash}from\"node:crypto\";function createFileImportSpecifier(e){let t=e.replaceAll(`\\\\`,`/`);return/^[A-Za-z]:\\//.test(t)?`file:///${encodeURI(t)}`:t.startsWith(`/`)?`file://${encodeURI(t)}`:t}");
+  const nitroHost = path.join(eveDist, "internal", "nitro", "host");
+  await mkdir(nitroHost, { recursive: true });
+  await writeFile(path.join(nitroHost, "create-application-nitro.js"),
+    "function resolveNitroModuleComparisonPath(e,t){return t.startsWith(`file://`)?normalizePath(stripFileSystemPrefix(stripPathQueryAndHash(fileURLToPath(t)))):isAbsolute(t)?normalizePath(stripFileSystemPrefix(stripPathQueryAndHash(t))):normalizePath(stripFileSystemPrefix(stripPathQueryAndHash(resolve(e,t))))}");
 
   const result = spawnSync(process.execPath, [path.join(packageRoot, "scripts", "patch-eve.mjs")], {
     cwd: workspace,
@@ -57,5 +63,7 @@ test("packaged Eve patch targets its installation when launched from another wor
   const loader = await readFile(path.join(eveDist, "internal", "authored-module-loader.js"), "utf8");
   assert.match(loader, /pathToFileURL/);
   assert.doesNotMatch(loader, /encodeURI/);
+  const applicationNitro = await readFile(path.join(nitroHost, "create-application-nitro.js"), "utf8");
+  assert.match(applicationNitro, /isAbsolute\(t\)\?normalizePath\(stripFileSystemPrefix\(t\)\)/);
   assert.match(await readFile(path.join(packageRoot, "agent", "lib", "active-settings.generated.ts"), "utf8"), /"model": "gateway"/);
 });

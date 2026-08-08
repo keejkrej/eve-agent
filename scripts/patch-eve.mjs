@@ -10,7 +10,19 @@ const statusPath = path.join(root, "node_modules/eve/dist/src/cli/dev/tui/status
 const runnerPath = path.join(root, "node_modules/eve/dist/src/cli/dev/tui/runner.js");
 const headerPath = path.join(root, "node_modules/eve/dist/src/cli/dev/tui/agent-header.js");
 const authoredModuleLoaderPath = path.join(root, "node_modules/eve/dist/src/internal/authored-module-loader.js");
+const applicationNitroPath = path.join(root, "node_modules/eve/dist/src/internal/nitro/host/create-application-nitro.js");
 
+async function patchApplicationNitroPaths() {
+  let source = await readFile(applicationNitroPath, "utf8");
+  const original = ':isAbsolute(t)?normalizePath(stripFileSystemPrefix(stripPathQueryAndHash(t))):';
+  const patched = ':isAbsolute(t)?normalizePath(stripFileSystemPrefix(t)):';
+  if (source.includes(patched)) return;
+  if (!source.includes(original)) {
+    throw new Error("Unsupported Eve Nitro path handling; update scripts/patch-eve.mjs");
+  }
+  source = source.replace(original, patched);
+  await writeFile(applicationNitroPath, source);
+}
 
 async function patchAuthoredModuleLoader() {
   let source = await readFile(authoredModuleLoaderPath, "utf8");
@@ -73,6 +85,7 @@ async function patchHeaderTips() {
 }
 
 await patchAuthoredModuleLoader();
+await patchApplicationNitroPaths();
 await patchHandler();
 await patchStatusLine();
 await patchRunner();

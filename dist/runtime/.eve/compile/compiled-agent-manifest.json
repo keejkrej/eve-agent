@@ -89,12 +89,25 @@
       "thresholdPercent": 0.75
     },
     "model": {
-      "id": "ollama-cloud/deepseek-v4-flash:0731",
+      "id": "openai/gpt-5.6-sol",
       "routing": {
         "kind": "external",
-        "provider": "ollama-cloud"
+        "provider": "openai"
       },
-      "contextWindowTokens": 131072,
+      "contextWindowTokens": 400000,
+      "providerOptions": {
+        "openai": {
+          "store": false,
+          "include": [
+            "reasoning.encrypted_content"
+          ],
+          "reasoningSummary": "auto",
+          "serviceTier": "priority"
+        },
+        "gateway": {
+          "serviceTier": "priority"
+        }
+      },
       "source": {
         "sourceKind": "module",
         "logicalPath": "agent.ts",
