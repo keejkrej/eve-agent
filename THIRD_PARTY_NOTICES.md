@@ -2,7 +2,7 @@
 
 The ChatGPT/OpenAI Codex OAuth protocol implementation under
 `src/models/oauth/` is based on the `pi-coding-agent` implementation in
-[`badlogic/pi-mono`](https://github.com/badlogic/pi-mono/tree/main/packages/coding-agent).
+[`earendil-works/pi`](https://github.com/earendil-works/pi/tree/main/packages/coding-agent).
 That project is distributed under the MIT License. Copyright (c) 2025 Mario
 Zechner and contributors.
 

@@ -87,7 +87,7 @@ eve-agent logout chatgpt
 
 Configuration and credentials are stored under `~/.config/eve-agent/`. Directories are mode `0700` and credential files mode `0600`. OAuth access tokens are refreshed automatically and a request receiving `401` is refreshed and retried once.
 
-> **Provider caveat:** ChatGPT subscription OAuth uses a public-client flow and service endpoints based on pi-coding-agent's implementation. The xAI device authorization implementation was informed by OpenCode. These provider endpoints are not stable public API contracts and may change or be restricted. Ensure your use complies with the providers' terms.
+> **Provider caveat:** ChatGPT subscription OAuth uses a public-client flow and service endpoints based on [Earendil Works Pi](https://github.com/earendil-works/pi)'s `pi-coding-agent` implementation. The xAI device authorization implementation was informed by OpenCode. These provider endpoints are not stable public API contracts and may change or be restricted. Ensure your use complies with the providers' terms.
 
 Run `/model` inside the Eve TUI to choose the model, thinking level, and Normal/Fast service tier. The model list is searchable: type any partial provider or model name to filter it. Fast maps to ChatGPT's priority service tier and is shown with `↯` in the footer. The selection is persisted; Eve waits for the rebuilt generation and refreshes the footer before returning control.
 
