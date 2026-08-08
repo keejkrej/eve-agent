@@ -1,0 +1,335 @@
+{
+  "agentRoot": "/Users/jack/workspace/eve-coding-agent/agent",
+  "appRoot": "/Users/jack/workspace/eve-coding-agent",
+  "channels": [
+    {
+      "kind": "channel",
+      "name": "eve",
+      "logicalPath": "channels/eve.ts",
+      "method": "GET",
+      "urlPath": "/eve/v1/info",
+      "sourceId": "channels/eve.ts",
+      "sourceKind": "module",
+      "adapterKind": "http"
+    },
+    {
+      "kind": "channel",
+      "name": "eve",
+      "logicalPath": "channels/eve.ts",
+      "method": "POST",
+      "urlPath": "/eve/v1/session",
+      "sourceId": "channels/eve.ts",
+      "sourceKind": "module",
+      "adapterKind": "http"
+    },
+    {
+      "kind": "channel",
+      "name": "eve",
+      "logicalPath": "channels/eve.ts",
+      "method": "POST",
+      "urlPath": "/eve/v1/session/reset",
+      "sourceId": "channels/eve.ts",
+      "sourceKind": "module",
+      "adapterKind": "http"
+    },
+    {
+      "kind": "channel",
+      "name": "eve",
+      "logicalPath": "channels/eve.ts",
+      "method": "POST",
+      "urlPath": "/eve/v1/session/clear",
+      "sourceId": "channels/eve.ts",
+      "sourceKind": "module",
+      "adapterKind": "http"
+    },
+    {
+      "kind": "channel",
+      "name": "eve",
+      "logicalPath": "channels/eve.ts",
+      "method": "POST",
+      "urlPath": "/eve/v1/session/compact",
+      "sourceId": "channels/eve.ts",
+      "sourceKind": "module",
+      "adapterKind": "http"
+    },
+    {
+      "kind": "channel",
+      "name": "eve",
+      "logicalPath": "channels/eve.ts",
+      "method": "POST",
+      "urlPath": "/eve/v1/session/:sessionId",
+      "sourceId": "channels/eve.ts",
+      "sourceKind": "module",
+      "adapterKind": "http"
+    },
+    {
+      "kind": "channel",
+      "name": "eve",
+      "logicalPath": "channels/eve.ts",
+      "method": "POST",
+      "urlPath": "/eve/v1/session/:sessionId/cancel",
+      "sourceId": "channels/eve.ts",
+      "sourceKind": "module",
+      "adapterKind": "http"
+    },
+    {
+      "kind": "channel",
+      "name": "eve",
+      "logicalPath": "channels/eve.ts",
+      "method": "GET",
+      "urlPath": "/eve/v1/session/:sessionId/stream",
+      "sourceId": "channels/eve.ts",
+      "sourceKind": "module",
+      "adapterKind": "http"
+    }
+  ],
+  "connections": [],
+  "config": {
+    "compaction": {
+      "thresholdPercent": 0.75
+    },
+    "model": {
+      "id": "anthropic/claude-sonnet-5",
+      "routing": {
+        "kind": "gateway",
+        "target": "anthropic"
+      },
+      "contextWindowTokens": 1000000
+    },
+    "name": "eve-agent",
+    "reasoning": "high",
+    "source": {
+      "sourceKind": "module",
+      "logicalPath": "agent.ts",
+      "sourceId": "agent.ts"
+    }
+  },
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "disabledFrameworkTools": [],
+  "dynamicInstructions": [
+    {
+      "eventNames": [
+        "session.started",
+        "turn.started"
+      ],
+      "logicalPath": "instructions/plugins.ts",
+      "slug": "plugins",
+      "sourceId": "instructions/plugins.ts",
+      "sourceKind": "module"
+    }
+  ],
+  "dynamicSkills": [],
+  "dynamicTools": [
+    {
+      "eventNames": [
+        "session.started"
+      ],
+      "logicalPath": "tools/plugins.ts",
+      "slug": "plugins",
+      "sourceId": "tools/plugins.ts",
+      "sourceKind": "module"
+    }
+  ],
+  "extensionMounts": [],
+  "hooks": [
+    {
+      "logicalPath": "hooks/plugins.ts",
+      "slug": "plugins",
+      "sourceId": "hooks/plugins.ts",
+      "sourceKind": "module"
+    }
+  ],
+  "remoteAgents": [],
+  "sandbox": null,
+  "sandboxWorkspaces": [],
+  "schedules": [],
+  "skills": [],
+  "tools": [
+    {
+      "description": "Run a shell command directly in the active host coding workspace. Use for Git, tests, builds, package managers, and repository inspection. Commands have the user's host permissions.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Shell command to execute with zsh -lc"
+          },
+          "timeoutSeconds": {
+            "default": 120,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3600
+          }
+        },
+        "required": [
+          "command"
+        ]
+      },
+      "logicalPath": "tools/bash.ts",
+      "name": "bash",
+      "sourceId": "tools/bash.ts",
+      "sourceKind": "module"
+    },
+    {
+      "description": "Make a precise edit in a host workspace file by replacing one exact, unique string. Prefer this over rewriting a whole existing file.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "oldText": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Exact text expected to occur once"
+          },
+          "newText": {
+            "type": "string",
+            "description": "Replacement text"
+          }
+        },
+        "required": [
+          "path",
+          "oldText",
+          "newText"
+        ]
+      },
+      "logicalPath": "tools/edit_file.ts",
+      "name": "edit_file",
+      "sourceId": "tools/edit_file.ts",
+      "sourceKind": "module"
+    },
+    {
+      "description": "List files in the active host coding workspace matching a glob. Respects ignore files when ripgrep is available.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pattern": {
+            "default": "**/*",
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "logicalPath": "tools/glob.ts",
+      "name": "glob",
+      "sourceId": "tools/glob.ts",
+      "sourceKind": "module"
+    },
+    {
+      "description": "Search host workspace file contents with ripgrep and return file names, line numbers, and matching lines.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pattern": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Regular expression"
+          },
+          "path": {
+            "default": ".",
+            "type": "string"
+          },
+          "glob": {
+            "type": "string"
+          },
+          "ignoreCase": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "pattern"
+        ]
+      },
+      "logicalPath": "tools/grep.ts",
+      "name": "grep",
+      "sourceId": "tools/grep.ts",
+      "sourceKind": "module"
+    },
+    {
+      "description": "Read a UTF-8 file from the active host coding workspace with line numbers. Paths are relative to the workspace root.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "startLine": {
+            "default": 1,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "endLine": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "logicalPath": "tools/read_file.ts",
+      "name": "read_file",
+      "sourceId": "tools/read_file.ts",
+      "sourceKind": "module"
+    },
+    {
+      "description": "Inspect the active host coding workspace. Call this at the start of a task to learn the repository root, Git state, and top-level files.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "logicalPath": "tools/workspace_info.ts",
+      "name": "workspace_info",
+      "sourceId": "tools/workspace_info.ts",
+      "sourceKind": "module"
+    },
+    {
+      "description": "Atomically create or replace a UTF-8 file in the active host coding workspace. Read existing files first and preserve unrelated content.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "content": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "content"
+        ]
+      },
+      "logicalPath": "tools/write_file.ts",
+      "name": "write_file",
+      "sourceId": "tools/write_file.ts",
+      "sourceKind": "module"
+    }
+  ],
+  "workspaceResourceRoot": {
+    "logicalPath": "workspace-resources/__root__",
+    "rootEntries": []
+  },
+  "instructions": {
+    "name": "instructions",
+    "logicalPath": "instructions.md",
+    "markdown": "# Identity\n\nYou are Eve Agent, a pragmatic senior software engineer working interactively in the user's selected repository. Your experience should feel like a strong terminal coding agent: inspect first, make focused changes, run the project's own checks, and communicate plainly.\n\n# Workspace\n\n- The repository is a host directory selected when `eve-agent` starts. It is not Eve's isolated `/workspace` sandbox.\n- At the beginning of the first task, call `workspace_info` before making assumptions.\n- Use `read_file`, `edit_file`, `write_file`, `glob`, `grep`, and `bash`; these tools have been overridden to operate on the selected host workspace.\n- Treat the workspace root as the hard boundary. Never try to inspect or modify paths outside it.\n- Read `AGENTS.md`, `CLAUDE.md`, repository documentation, and nearby conventions when they exist. More deeply nested instruction files take precedence for their subtree.\n\n# Working style\n\n1. Understand the request and inspect the smallest relevant part of the codebase.\n2. If ambiguity would materially change the result, ask one focused question. Otherwise make a sensible choice and proceed.\n3. For non-trivial work, maintain a short todo list and keep it current.\n4. Read an existing file before changing it. Prefer `edit_file` for a precise change and `write_file` for new files or deliberate whole-file replacements.\n5. Preserve unrelated user changes. Never use `git reset --hard`, `git clean`, broad deletion, or checkout-overwrite to remove work.\n6. Follow the repository's existing architecture and style. Avoid speculative abstractions and unrelated cleanup.\n7. Run the most relevant tests, type checks, linters, or builds using the repository's own environment. Diagnose failures rather than hiding them.\n8. Inspect `git diff` and `git status` before declaring completion.\n\n# Safety and autonomy\n\n- You may read, edit, and run normal development commands without asking for routine confirmation.\n- Ask before destructive operations, installing system-wide software, publishing, deploying, pushing, creating a PR, or changing remote resources. Some dangerous shell commands are also approval-gated by the runtime.\n- Do not expose secrets from environment files, credential stores, or command output. Never add secrets to source control.\n- Do not commit unless the user explicitly requests a commit.\n- Delegated agents share the host tools and workspace. Use them mainly for independent inspection or analysis; do not let multiple agents edit overlapping files.\n\n# Communication\n\n- Be concise while working. Explain what you are about to do when it helps the user follow along.\n- Do not narrate every trivial file read or command.\n- Final responses should summarize what changed, list validation performed and its result, and call out any remaining risk or unverified step.\n- Never claim a test passed unless you ran it and observed the result.\n",
+    "sourceId": "instructions.md",
+    "sourceKind": "markdown"
+  },
+  "kind": "eve-agent-compiled-manifest",
+  "subagentEdges": [],
+  "subagents": [],
+  "version": 39
+}

@@ -3,7 +3,7 @@ import { constants } from "node:fs";
 import { access, readFile, realpath, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawn } from "node:child_process";
 import { writeActiveSettingsFile } from "./active-settings-file.mjs";
 import { buildAgent, runPrebuiltAgent } from "./prebuilt-runtime.mjs";
@@ -15,6 +15,7 @@ if (major < 24) {
 }
 
 const agentRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+await import(pathToFileURL(path.join(agentRoot, "scripts", "patch-eve.mjs")).href);
 const commands = new Set(["login", "logout", "model", "models", "auth", "help", "--help", "-h"]);
 const inputArgs = process.argv.slice(2);
 

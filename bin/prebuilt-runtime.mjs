@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { access } from "node:fs/promises";
+import { access, cp, mkdir } from "node:fs/promises";
 import net from "node:net";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -70,9 +70,19 @@ export async function buildAgent(agentRoot, { quiet = false } = {}) {
 }
 
 export async function runPrebuiltAgent({ agentRoot, workspace }) {
-  const output = path.join(agentRoot, ".output", "server", "index.mjs");
+  const outputRoot = path.join(agentRoot, ".output");
+  const output = path.join(outputRoot, "server", "index.mjs");
   try { await access(output); }
-  catch { throw new Error("Installed Eve Agent has no build output. Reinstall it; repository development should use `npm run dev`."); }
+  catch {
+    const prebuilt = path.join(agentRoot, "dist", "runtime");
+    try {
+      await mkdir(outputRoot, { recursive: true });
+      await cp(prebuilt, outputRoot, { recursive: true });
+      await access(output);
+    } catch {
+      throw new Error("Installed Eve Agent has no prebuilt runtime. Reinstall it; repository development should use `npm run dev`.");
+    }
+  }
 
   const eve = path.join(agentRoot, "node_modules", ".bin", "eve");
   const port = await availablePort();

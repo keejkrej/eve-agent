@@ -16,15 +16,16 @@ test("installed launcher serves prebuilt output instead of invoking Eve dev", as
   assert.match(launcher, /runPrebuiltAgent/);
   assert.match(runtime, /\["start", "--host"/);
   assert.match(runtime, /\.output/);
-  assert.equal(manifest.scripts.postinstall, "node scripts/install-runtime.mjs");
+  assert.equal(manifest.scripts.postinstall, undefined);
   assert.equal(manifest.scripts.prepare, undefined);
+  assert.ok(manifest.files.includes("dist"));
 });
 
 test("installed runtime fails clearly when installation produced no build", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "eve-agent-unbuilt-"));
   await assert.rejects(
     runPrebuiltAgent({ agentRoot: root, workspace: root }),
-    /Installed Eve Agent has no build output/,
+    /Installed Eve Agent has no prebuilt runtime/,
   );
 });
 

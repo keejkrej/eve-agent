@@ -1,0 +1,112 @@
+{
+  "agentId": "eve-agent",
+  "agentRoot": "/Users/jack/workspace/eve-coding-agent/agent",
+  "appRoot": "/Users/jack/workspace/eve-coding-agent",
+  "channels": [
+    {
+      "sourceKind": "module",
+      "logicalPath": "channels/eve.ts",
+      "sourceId": "channels/eve.ts"
+    }
+  ],
+  "connections": [],
+  "diagnosticsSummary": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "extensions": [],
+  "resolvedExtensions": [],
+  "hooks": [
+    {
+      "sourceKind": "module",
+      "logicalPath": "hooks/plugins.ts",
+      "sourceId": "hooks/plugins.ts"
+    }
+  ],
+  "instructions": [
+    {
+      "definition": {
+        "markdown": "# Identity\n\nYou are Eve Agent, a pragmatic senior software engineer working interactively in the user's selected repository. Your experience should feel like a strong terminal coding agent: inspect first, make focused changes, run the project's own checks, and communicate plainly.\n\n# Workspace\n\n- The repository is a host directory selected when `eve-agent` starts. It is not Eve's isolated `/workspace` sandbox.\n- At the beginning of the first task, call `workspace_info` before making assumptions.\n- Use `read_file`, `edit_file`, `write_file`, `glob`, `grep`, and `bash`; these tools have been overridden to operate on the selected host workspace.\n- Treat the workspace root as the hard boundary. Never try to inspect or modify paths outside it.\n- Read `AGENTS.md`, `CLAUDE.md`, repository documentation, and nearby conventions when they exist. More deeply nested instruction files take precedence for their subtree.\n\n# Working style\n\n1. Understand the request and inspect the smallest relevant part of the codebase.\n2. If ambiguity would materially change the result, ask one focused question. Otherwise make a sensible choice and proceed.\n3. For non-trivial work, maintain a short todo list and keep it current.\n4. Read an existing file before changing it. Prefer `edit_file` for a precise change and `write_file` for new files or deliberate whole-file replacements.\n5. Preserve unrelated user changes. Never use `git reset --hard`, `git clean`, broad deletion, or checkout-overwrite to remove work.\n6. Follow the repository's existing architecture and style. Avoid speculative abstractions and unrelated cleanup.\n7. Run the most relevant tests, type checks, linters, or builds using the repository's own environment. Diagnose failures rather than hiding them.\n8. Inspect `git diff` and `git status` before declaring completion.\n\n# Safety and autonomy\n\n- You may read, edit, and run normal development commands without asking for routine confirmation.\n- Ask before destructive operations, installing system-wide software, publishing, deploying, pushing, creating a PR, or changing remote resources. Some dangerous shell commands are also approval-gated by the runtime.\n- Do not expose secrets from environment files, credential stores, or command output. Never add secrets to source control.\n- Do not commit unless the user explicitly requests a commit.\n- Delegated agents share the host tools and workspace. Use them mainly for independent inspection or analysis; do not let multiple agents edit overlapping files.\n\n# Communication\n\n- Be concise while working. Explain what you are about to do when it helps the user follow along.\n- Do not narrate every trivial file read or command.\n- Final responses should summarize what changed, list validation performed and its result, and call out any remaining risk or unverified step.\n- Never claim a test passed unless you ran it and observed the result.\n"
+      },
+      "sourceKind": "markdown",
+      "logicalPath": "instructions.md",
+      "sourceId": "instructions.md"
+    },
+    {
+      "sourceKind": "module",
+      "logicalPath": "instructions/plugins.ts",
+      "sourceId": "instructions/plugins.ts"
+    }
+  ],
+  "lib": [
+    {
+      "sourceKind": "module",
+      "logicalPath": "lib/active-settings.generated.ts",
+      "sourceId": "lib/active-settings.generated.ts"
+    },
+    {
+      "sourceKind": "module",
+      "logicalPath": "lib/plugins.ts",
+      "sourceId": "lib/plugins.ts"
+    },
+    {
+      "sourceKind": "module",
+      "logicalPath": "lib/workspace.ts",
+      "sourceId": "lib/workspace.ts"
+    }
+  ],
+  "kind": "eve-agent-discovery-manifest",
+  "sandbox": null,
+  "sandboxWorkspaces": [],
+  "schedules": [],
+  "skills": [],
+  "tools": [
+    {
+      "sourceKind": "module",
+      "logicalPath": "tools/bash.ts",
+      "sourceId": "tools/bash.ts"
+    },
+    {
+      "sourceKind": "module",
+      "logicalPath": "tools/edit_file.ts",
+      "sourceId": "tools/edit_file.ts"
+    },
+    {
+      "sourceKind": "module",
+      "logicalPath": "tools/glob.ts",
+      "sourceId": "tools/glob.ts"
+    },
+    {
+      "sourceKind": "module",
+      "logicalPath": "tools/grep.ts",
+      "sourceId": "tools/grep.ts"
+    },
+    {
+      "sourceKind": "module",
+      "logicalPath": "tools/plugins.ts",
+      "sourceId": "tools/plugins.ts"
+    },
+    {
+      "sourceKind": "module",
+      "logicalPath": "tools/read_file.ts",
+      "sourceId": "tools/read_file.ts"
+    },
+    {
+      "sourceKind": "module",
+      "logicalPath": "tools/workspace_info.ts",
+      "sourceId": "tools/workspace_info.ts"
+    },
+    {
+      "sourceKind": "module",
+      "logicalPath": "tools/write_file.ts",
+      "sourceId": "tools/write_file.ts"
+    }
+  ],
+  "version": 12,
+  "subagents": [],
+  "configModule": {
+    "sourceKind": "module",
+    "logicalPath": "agent.ts",
+    "sourceId": "agent.ts"
+  }
+}
