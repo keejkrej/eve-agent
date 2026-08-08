@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { access, cp, mkdir } from "node:fs/promises";
+import { access, cp, mkdir, readFile, writeFile } from "node:fs/promises";
 import net from "node:net";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -77,6 +77,30 @@ export async function buildAgent(agentRoot, { quiet = false } = {}) {
   });
 }
 
+const RELOCATABLE_RUNTIME_FILES = [
+  ["server", "index.mjs"],
+  [".eve", "discovery", "agent-discovery-manifest.json"],
+  [".eve", "compile", "compiled-agent-manifest.json"],
+];
+
+export async function relocatePrebuiltRuntime(outputRoot, agentRoot) {
+  const manifestPath = path.join(outputRoot, ".eve", "compile", "compiled-agent-manifest.json");
+  const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  const authoredRoot = typeof manifest.appRoot === "string" ? manifest.appRoot : undefined;
+  if (!authoredRoot || path.resolve(authoredRoot) === path.resolve(agentRoot)) return;
+
+  const escapedAuthoredRoot = JSON.stringify(authoredRoot).slice(1, -1);
+  const escapedAgentRoot = JSON.stringify(agentRoot).slice(1, -1);
+  for (const segments of RELOCATABLE_RUNTIME_FILES) {
+    const file = path.join(outputRoot, ...segments);
+    const source = await readFile(file, "utf8");
+    const relocated = source
+      .replaceAll(escapedAuthoredRoot, escapedAgentRoot)
+      .replaceAll(authoredRoot, agentRoot);
+    if (relocated !== source) await writeFile(file, relocated);
+  }
+}
+
 export async function runPrebuiltAgent({ agentRoot, workspace, settings = {} }) {
   const outputRoot = path.join(agentRoot, ".output");
   const output = path.join(outputRoot, "server", "index.mjs");
@@ -91,6 +115,8 @@ export async function runPrebuiltAgent({ agentRoot, workspace, settings = {} }) 
       throw new Error("Installed Eve Agent has no prebuilt runtime. Reinstall it; repository development should use `npm run dev`.");
     }
   }
+
+  await relocatePrebuiltRuntime(outputRoot, agentRoot);
 
   const eve = path.join(agentRoot, "node_modules", ".bin", "eve");
   const port = await availablePort();

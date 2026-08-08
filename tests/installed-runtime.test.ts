@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { writeActiveSettingsFile } from "../bin/active-settings-file.mjs";
-import { runPrebuiltAgent, settingsEnvironment } from "../bin/prebuilt-runtime.mjs";
+import { relocatePrebuiltRuntime, runPrebuiltAgent, settingsEnvironment } from "../bin/prebuilt-runtime.mjs";
 
 test("installed launcher serves prebuilt output instead of invoking Eve dev", async () => {
   const [launcher, cli, runtime, manifest] = await Promise.all([
@@ -58,4 +58,28 @@ test("configured model settings override a stale prebuilt runtime", () => {
     EVE_AGENT_REASONING_OVERRIDE: "high",
     EVE_AGENT_PRIORITY_OVERRIDE: "false",
   });
+});
+
+test("installed runtime relocates authored paths to the package root", async () => {
+  const outputRoot = await mkdtemp(path.join(os.tmpdir(), "eve-agent-relocated-"));
+  const authoredRoot = "/build-machine/eve-agent";
+  const installedRoot = path.join(outputRoot, "installed", "eve-agent");
+  const files = [
+    path.join(outputRoot, "server", "index.mjs"),
+    path.join(outputRoot, ".eve", "discovery", "agent-discovery-manifest.json"),
+    path.join(outputRoot, ".eve", "compile", "compiled-agent-manifest.json"),
+  ];
+  await Promise.all(files.map((file) => mkdir(path.dirname(file), { recursive: true })));
+  await Promise.all(files.map((file) => writeFile(file, JSON.stringify({
+    agentRoot: `${authoredRoot}/agent`,
+    appRoot: authoredRoot,
+  }))));
+
+  await relocatePrebuiltRuntime(outputRoot, installedRoot);
+
+  for (const file of files) {
+    const relocated = await readFile(file, "utf8");
+    assert.doesNotMatch(relocated, /build-machine/);
+    assert.ok(relocated.includes(installedRoot));
+  }
 });

@@ -1,6 +1,6 @@
 {
-  "agentRoot": "/Users/jack/workspace/eve-coding-agent/agent",
-  "appRoot": "/Users/jack/workspace/eve-coding-agent",
+  "agentRoot": "/Users/jack/workspace/eve-agent/agent",
+  "appRoot": "/Users/jack/workspace/eve-agent",
   "channels": [
     {
       "kind": "channel",
